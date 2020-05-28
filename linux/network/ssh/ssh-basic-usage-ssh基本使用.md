@@ -497,6 +497,26 @@ user@host:/remote/folder /mount/point  fuse.sshfs noauto,x-systemd.automount,_ne
 
 # 安全策略
 
+- 如果服务端openssh版本过低，应该更新openssh，尤其是某些版本已经曝出过重大漏洞的情况。
+
+- 检查服务端sshd使用的加密算法，应该去掉已经被证实的弱加密算法，例如`arcfour`和`des`系列算法。
+
+  新版本openssh一般会不采用已经曝光的弱加密算法。
+
+  可以用nmap扫描目标ssh服务器，获取其sshd使用的加密算法（encryption_algorithms）
+
+  ```shell
+  nmap --scrip "ssh2*" <server>
+  ```
+
+  可以在`sshd_config`中配置`Ciphers`指定使用高强度加密算法，例如：
+
+  ```shell
+  Ciphers aes256-ctr chacha20-poly1305@openssh.com aes256-gcm@openssh.com
+  ```
+
+  修改后需要重启sshd服务。
+
 - 登录记录查看
 
   - 登录历史
@@ -532,10 +552,11 @@ user@host:/remote/folder /mount/point  fuse.sshfs noauto,x-systemd.automount,_ne
 
 - 更改默认的22端口
   
+
 减少被工具批量扫描的几率。修改服务器的`/etc/ssh/sshd_config`文件中的`Port` 值为其他可用端口。
-  
+
 如果要监听多端口，则添加多行`Port`，如果要指定监听的地址，添加`ListenAddress`行：
-  
+
   ```shell
   Port 1234
   Port 520
@@ -710,7 +731,7 @@ ssh命令中使用参数`-v`可输出详细的调试信息
 
 - 协议不支持问题
 
-  ssh版本过低引起，均可以升级服务器/客户端的ssh程序版本解决。
+  均可以升级服务器/客户端的ssh程序版本解决。
 
   - `no matching key exchange method found. Their offer: diffie-hellman-group-exchange-sha1,diffie-hellman-group1-sha1`
 
