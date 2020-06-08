@@ -176,7 +176,7 @@ unset DBUS_SESSION_BUS_ADDRESS
 export XKL_XMODMAP_DISABLE=1
 
 #指定要使用什么桌面环境或窗口管理器
-#session=startxfce     #xfce
+#session=startxfce4    #xfce
 #session=startlxde     #lxde
 session=gnome-session  #GNOME
 #session=mate-session  #MATE

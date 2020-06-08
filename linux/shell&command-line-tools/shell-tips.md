@@ -11,7 +11,7 @@
 - install命令会恰当地处理文件权限的问题。
 
   - `install -c a /path/to/b`  把目标文件b的权限设置为`-rwxr-xr-x`
-  - `install -m0644  a /path/to/b`  把目标文件b的权限设置为`-rw-r--r--`
+  - `install -m 0644  a /path/to/b`  把目标文件b的权限设置为`-rw-r--r--`
 
 - install命令可以打印出更多更合适的debug信息，还会自动处理SElinux上下文的问题。
 
@@ -35,6 +35,8 @@ gnome-terminal -- python
 - `$EDITOR`  默认编辑器（某些软件会调用例如git commit时）
 
 # shell脚本相关
+
+- `sh`中没有`source`
 
 - `$SHELL`  当前shell名称
 

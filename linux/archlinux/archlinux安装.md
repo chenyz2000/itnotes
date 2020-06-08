@@ -34,7 +34,7 @@
 
     ```shell
     #/path/arch.iso是下载的Arch Linux镜像文件路径  /dev/sdx U盘的设备编号（根据情况修改如sdb sdc）
-    dd if=/path/arch.iso of=/dev/sdx bs=4096
+    dd if=/path/arch.iso of=/dev/sdx bs=1024
     ```
 
 
@@ -86,48 +86,46 @@
   ```shell
   parted /dev/sda mklabel gpt #在/dev/sda创建gpt
   ```
-  
+
 - 分区参考
 
   - UEFI
 
-    - **ESP**（即[EFI system partition](https://wiki.archlinux.org/index.php/EFI_system_partition_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87))） 
+    - ESP（即[EFI system partition](https://wiki.archlinux.org/index.php/EFI_system_partition_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87))）
 
-       存放UEFI启动引导文件 （建议200M+）
+       存放UEFI启动引导文件（一般100M+对于三四个系统都绰绰有余）
 
-    - **/**  系统根目录
+    - /  系统根目录
 
       根据情况划分，需要安装的应用越大/越多，规划空间就越多，一般桌面用户建议至少25G+。
 
-    - /boot 可选
+    - /boot  可选 随意
 
-      如果要单独创建该分区，容量建议100M+。
-
-      也可以将ESP挂载到/boot目录而不再单独创建boot分区。
+      如果要单独创建该分区，容量建议200M+。
 
     - home  用户目录 可选 **但建议单独划分**
-  
+
       **如果作为日常使用需要存放文件，当然越大越好。**
-      
-    - swap 可选 4G+ 不建议单独划分（建议使用swap文件）
-  
+
+    - swap  可选 4G+ 不建议单独划分（建议使用swap文件）
+
   - MBR
-  
+
     - /  系统根目录
+
     - /boot  可选 启动分区  200M+
-    
+
     - home  可选  **但建议单独划分**
-    
-    - swap 可选  4G+ 不建议单独划分（建议使用swap文件）
-    
-      
-  
+
+    - swap  可选  4G+ 不建议单独划分（建议使用swap文件）
+
+
   使用[swap文件](https://wiki.archlinux.org/index.php/Swap_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)#%E4%BA%A4%E6%8D%A2%E6%96%87%E4%BB%B6)（brtfs分区除外，因为其不支持swap文件，注意该提示可能会过时）swap文件比使用swap分区更为灵活，易于调整，二者没有性能差别。
-  
+
   物理内存很大也可以不划分swap，**需要进行大量使用内存的操作而可能造成内存耗尽建议划分，某些软件可能会要求有swap空间，另要使用休眠功能必须划分。**(*休眠所需swap大小和休眠前系统开启的程序占用的内存大小有关，根据情况酌情调整。*)
-  
-  
-  
+
+
+
   分区大小建议：不清楚自己需要划分多大的分区，尤其是根分区`/`和swap分区（还是推荐使用swap文件），建议使用LVM，使用LVM创建vg（卷组），在vg中创建lv（逻辑卷），使用这些逻辑卷创建各个分区。注意，不要将ESP放入LVM中。
 
 ### UEFI模式
@@ -167,71 +165,71 @@ ls /sys/firmware/efi/  #如果该文件存在则表示使用UEFI启动
     如果使用lvm-raid，参看[arch-wiki:lvm#RAID](https://wiki.archlinux.org/index.php/LVM_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)#%E4%B8%BARAID%E9%85%8D%E7%BD%AEmkinitcpio)
 
     使用cfdisk或其他磁盘工具将剩余空间创建一个分区。*假设其为/dev/sda2。*
-  
+
     ```shell
     #1.建立物理卷：在 /dev/sda2建立物理卷
     pvcreate /dev/sda3
-    
+
     #2.建立卷组：新建名为linux的卷组 并 将sda2加入到卷组中
     vgcreate linux /dev/sda2
-    
+
     #3.建立逻辑卷：在linux卷组中建立root和home逻辑卷
     #lvcreate -L 200M linux -n boot   #如果要创建boot分区
     lvcreate -L 30G linux -n root  #3.2.1  用linux卷组中30G空间建立适用于根分区的逻辑卷
     lvcreate -l +100%FREE linux -n home   #3.2.2  用linux卷组中所有剩余空间建立home逻辑卷
     #lvcreate -L 100G linux -n home  #创建home逻辑卷并指定100GB空间
-    
+
     #4.各个逻辑卷创建文件系统
     mkfs.ext4 /dev/mapper/linux-root    #根分区
     mkfs.ext4 /dev/mapper/linux-home   #home分区
     #mkfs.ext4 /dev/mapper/linux-boot   #如果创建有boot分区
-    
+
     #5.挂载
-    mount /dev/mapper/linux-root /mnt    #挂载根分区
-    
+    #根分区
+    mount /dev/mapper/linux-root /mnt
+
+    #home分区
     mkdir /mnt/home    #建立home挂载点
     mount /dev/mapper/linux-home /mnt/home
-    
-    #将/boot作为esp的挂载点
-    #这样除了efi文件外，grub、kernel等也会安装到esp上
-    mkdir -p /mnt/boot
-    mount /dev/sda1 /mnt/boot
-    
-    #如果创建有boot分区，或不将/boot作为esp挂载点，而是将esp挂载的/boot/efi
-    #mkdir /mnt/boot/efi -p
-    #mount /dev/sda1 /mnt/boot/efi
+
+    #boot分区 （如果有单独的boot分区）
+    #mdkir /mnt/boot
+    #mount /dev/mapper/linux-boot /mnt/boot
+
+    #EFI分区
+    mkdir /mnt/boot/efi -p
+    mount /dev/sda1 /mnt/boot/efi
     ```
-  
+
     swap文件（可选）
-  
+
     ```shell
-    swap_size=8G  #swap文件大小(根据具体情况设置大小)
+    swap_size=8G              #swap文件大小(根据具体情况设置大小)
     swap_file=/mnt/home/swap  #swap文件存放位置
     fallocate -l $swap_size $swap_file
     chmod 600 $swap_file
     mkswap $swap_file
     swapon $swap_file
     ```
-  
+
   - 使用标准方式创建其他分区
-  
+
     使用cfdisk或其他工具创建`/`根分区（*假设为/dev/sda2*）和home（*假设为/dev/sda3*）用户家目录分区，创建文件系统：
-  
+
     ```shell
     #1. 挂载根分区
     mkfs.ext4 /dev/sda2
     mount /dev/sda2 /mnt    #挂载根分区
-    
+
     #2. 挂载home分区
     mkfs.ext4 /dev/sda3
-  mkdir /mnt/home    #建立home挂载点
+    mkdir /mnt/home    #建立home挂载点
     mount /dev/sda3 /mnt/home    #挂载home逻辑卷到/home
-    
+
     #3.挂载esp
     mkdir -p /mnt/boot/efi  #建立efi系统分区的挂载点
     mount /dev/sda1 /mnt/boot/efi    #挂载esp到/boot/efi
     ```
-  
 
 swap文件同上。
 
@@ -240,10 +238,10 @@ swap文件同上。
 无ESP相关部分，其余参看上文。
 
 ```shell
-#...创建了挂载的/mnt的根分区
+#...创建挂载的/mnt的根分区
 #...挂载home
 #挂载boot
-mkdir /mnt/boot
+mkdir /mnt/boot分区
 mkfs.vfat /dev/sda1
 mount /dev/sda1 /boot
 ```
@@ -272,7 +270,7 @@ Server = https://mirrors.163.com/archlinux/$repo/os/$arch
 ## 安装基础系统
 
 ```shell
-##base-devel 可选
+##base-devel 包可选 构建aur可能需要
 pacstrap /mnt base linux linux-firmware mkinitcpio
 ```
 ## 建立fstab文件
@@ -284,7 +282,7 @@ genfstab -U /mnt > /mnt/etc/fstab
 fallocate -l 4G /mnt/home/swap
 mkswap /mnt/home/swap
 chmod 600 /mnt/home/swap
-#注意是>> 
+#注意是>>
 echo '/home/swap none swap defaults,nofail 0 0'  >> /mnt/etc/fstab
 
 cat /mnt/etc/fstab    # 查看生成的 /mnt/etc/fstab
@@ -342,15 +340,16 @@ zh_TW.UTF-8 UTF-8
 ```shell
 locale-gen
 ```
-  ```shell
-  passwd     #设置或更改root用户密码  接着输入两次密码（密码不会显示出来）
-  
-  #添加普通用户 （可选）
-  useradd -m user1
-  #如果要添加为管理用户，可直接在创建是加入wheel组
-  useradd -m -g wheel user1
-  passwd user1    #设置或更改user1用户密码 接着输入两次密码
-  ```
+## 用户和密码
+
+```shell
+passwd     #设置或更改root用户密码  接着输入两次密码（密码不会显示出来）
+#添加普通用户 （可选）
+useradd -m user1
+#如果要添加为管理用户，可直接在创建是加入wheel组
+useradd -m -g wheel user1
+passwd user1    #设置或更改user1用户密码 接着输入两次密码
+```
 
 
 - 给予普通用户sudo权限
@@ -358,20 +357,20 @@ locale-gen
   ```shell
   echo  'user1 ALL=(ALL) ALL' > /etc/sudoers.d/sudo    #将user1加入sudo
   ```
-  
+
   或使用visudo编辑添加：
-  
+
   ```shell
   pacman -S vim  #visudo默认编辑器是vim
   visudo
   ```
-  
+
   visudo命令会使用vi打开一个文件，在该文件中添加类似：
-  
+
   > user1 ALL=(ALL) ALL'
-  
+
   或去掉wheel行前面的注释（如果在创建用户时将用户加入了wheel组）。
-  
+
   参看[arch-wiki:sudo](https://wiki.archlinux.org/index.php/Sudo_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87))
 
 
@@ -402,19 +401,20 @@ linux自带的`linux-frimware`已经支持大多数驱动，如果某些设置�
 - 有线网络
 
   ```shell
+  pacman -S dhcpcd
   systemctl enable dhcpcd  #开机自启动有线网络 当然也可以手动执行 dhcpcd 连接
   ```
 
 - 无线网络
-```shell
+
+  ```shell
   #无线网络需要安装这些工具使用wifi-menu联网
   pacman -S iw wpa_supplicant dialog netctl
   ip a  #查看到当前连接无线的网卡名字
   systemctl enable netctl-auto@网卡名字  #开机自动使用该网卡连接曾经接入的无线网络
-```
+  ```
 
-参看archlinux-wiki的[netctl](#https://wiki.archlinux.org/index.php/Network_configuration_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)和[网络配置](https://wiki.archlinux.org/index.php/Network_configuration_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)了解更多。
-
+  参看archlinux-wiki的[netctl](#https://wiki.archlinux.org/index.php/Network_configuration_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)和[网络配置](https://wiki.archlinux.org/index.php/Network_configuration_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)了解更多。
 ## 系统引导
 
 - 安装[微码](https://wiki.archlinux.org/index.php/Microcode_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87))（建议安装）
@@ -423,13 +423,11 @@ linux自带的`linux-frimware`已经支持大多数驱动，如果某些设置�
   pacman -S intel-ucode   #仅intel CPU安装
   pacman -S amd-ucode  #仅amd CPU安装
   ```
-```
-
 - 如过要引导多系统安装（可选）
 
   ```shell
   pacman -S os-prober
-```
+  ```
 
 - 引导工具
 
@@ -441,10 +439,11 @@ linux自带的`linux-frimware`已经支持大多数驱动，如果某些设置�
 
     ```shell
     pacman -S efibootmgr  #使用esp还需安装
+    ##如果单独划分了esp，将其挂载到/boot/efi，则--efi-directory=/boot/efi
     grub-install --efi-directory=/boot --bootloader-id=grub
-    ```
+  ```
 
-   - 使用Legacy
+ - 使用Legacy
 
      ```shell
      grub-install  /dev/sda
@@ -458,7 +457,7 @@ linux自带的`linux-frimware`已经支持大多数驱动，如果某些设置�
    ```
 
    如果在生成引导命令执行后卡住，很久不能成功，参看下方[生成grub配置时挂起](#生成grub配置时挂起)解决。
-   
+
    **注意**：如果多系统使用grub配合os-prober管理，但在启动的grub菜单中找不到其他系统的引导条目，可在**进入系统**再次执行该命令重新检测生成。
 
 至此**基础系统**安装完成，**基础系统仅有字符界面**，可继续进行下面的[常用配置](#常用配置)安装流程，或者结束基础安装重启系统：**连续按两次`ctrl`+`d` ，输入`reboot`重启并拔出u盘**。
@@ -487,11 +486,16 @@ echo MyPC > /etc/hostname  #MyPC是要设置的主机名
 
 ### 字体
 
-参看[archwiki:fonts](https://wiki.archlinux.org/index.php/Fonts_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87))选择安装字体。
+参看[archwiki:fonts](https://wiki.archlinux.org/index.php/Fonts_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87))根据需要安装字体，一般建议至少安装以下三类字体。
 
-- 终端等宽字体，如`ttf-dejavu`
-- 数学和符号字体，如`ttf-symbola`（需要aur）（符号中也包含emoji表情，另外`noto-fonts-emoji` 是noto字体的emoji表情符号包）
-- 中文字体参看下文[中文显示](#中文显示)。
+- 等宽字体，如`otf-fira-code`和`ttf-dejavu`。
+- 数学和特殊符号字体，如`noto-fonts-emoji`（emoji表情)和`ttf-symbola`（需要aur）。
+- 中文字体，如`wqy-microhei`（文泉驿微米黑），可参看下文[中文显示](#中文显示)。
+
+```shell
+pacman -S wqy-microhei otf-fira-code noto-fonts-emoji
+```
+
 
 ## 图形界面
 
@@ -500,18 +504,18 @@ echo MyPC > /etc/hostname  #MyPC是要设置的主机名
 首先需要了解设备的显卡信息，也可是使用`lspci | grep VGA`查看。根据显卡情况安装驱动：
 
 ```shell
-pacman -S xf86-video-vesa     #通用显卡
-pacman -S xf86-video-intel     #intel核心显卡  可不安装 内核中已经集成开源实现
-pacman -S nvidia                       #nvidia显卡驱动（包含vulkan）
-pacman -S mesa                       #amd显卡使用开源mesa驱动即可(一般已经在基础系统中集成)
+pacman -S xf86-video-vesa    #通用显卡
+pacman -S xf86-video-intel   #intel核心显卡  可不安装 内核中已经集成开源实现
+pacman -S nvidia             #nvidia显卡驱动（包含vulkan）
+pacman -S mesa               #amd显卡使用开源mesa驱动即可(一般已经在基础系统中集成)
 
 #vulkan 支持
-pacman -S vulkan-intel    #intel显卡
-pacman -S vulkan-radeon    #amd/ati显卡
+pacman -S vulkan-intel       #intel显卡
+pacman -S vulkan-radeon      #amd/ati显卡
 
 #opencl支持
-pacman -S opencl-mesa  #mesa(amd)
-pacman -S opencl-nvidia  #nvidia
+pacman -S opencl-mesa        #mesa(amd)
+pacman -S opencl-nvidia      #nvidia
 ```
 注意：
 
@@ -548,12 +552,12 @@ pacman -S opencl-nvidia  #nvidia
 中文字体选择一款（或多款）安装，如：
 
 ```shell
-pacman -S wqy-micorhei    #文泉驿微米黑
-pacman -S adobe-source-han-sans-cn-fonts    # 思源黑体简体中文包
-pacman -S ttf-arphic-uming    #文鼎明体
+pacman -S wqy-microhei                     #文泉驿微米黑
+pacman -S adobe-source-han-sans-cn-fonts   # 思源黑体简体中文包
+pacman -S ttf-arphic-uming                 #文鼎明体
 ```
 
-更多字体参看[中日韩越字体](https://wiki.archlinux.org/index.php/Fonts_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)#.E4.B8.AD.E6.97.A5.E9.9F.A9.E8.B6.8A.E6.96.87.E5.AD.97) 。安装思源黑体全集（或noto fonts cjk）而出现的中文显示异体字形的问题，参看该文的[修正简体中文显示为异体（日文）字形](https://wiki.archlinux.org/index.php/Arch_Linux_Localization_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)#.E4.B8.AD.E6.96.87.E5.AD.97.E4.BD.93) 。
+更多字体参看[中日韩越CJKV字体](https://wiki.archlinux.org/index.php/Fonts_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)#.E4.B8.AD.E6.97.A5.E9.9F.A9.E8.B6.8A.E6.96.87.E5.AD.97) 。安装思源黑体全集（或noto fonts cjk）而出现的中文显示异体字形的问题，参看该文的[修正简体中文显示为异体（日文）字形](https://wiki.archlinux.org/index.php/Arch_Linux_Localization_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)#.E4.B8.AD.E6.96.87.E5.AD.97.E4.BD.93) 。
 
 
 

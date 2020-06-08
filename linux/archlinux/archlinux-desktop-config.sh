@@ -23,8 +23,8 @@ pacman -S zsh oh-my-zsh-git
 
 pacman -S pacman-contrib yay  tmux ntfs-3g exfat-utils man-pages-zh_cn --noconfirm #autojump bash-completion
 
-# fonts && input ##ttf-dejavu
-pacman -S otf-fira-code adobe-source-han-sans-otc-fonts fcitx fcitx-gtk3 fcitx-qt5 fcitx-cloudpinyin fcitx-configtool --noconfirm
+# fonts && input
+pacman -S otf-fira-code wqy-microhei noto-fonts-emoji fcitx fcitx-gtk3 fcitx-qt5 fcitx-cloudpinyin fcitx-configtool --noconfirm #adobe-source-han-sans-otc-fonts ttf-dejavu
 
 echo "
 export GTK_IM_MODULE=fcitx

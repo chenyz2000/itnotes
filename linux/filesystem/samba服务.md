@@ -46,6 +46,7 @@ samba使用445 TCP/UDP端口：
    # multi config(smb.conf.host1 smb.conf.host2)
    ;config file = /etc/samba/smb.conf.%m
    
+   #windows workgroup or domain
    workgroup = MYGROUP
    netbios name = SAMBA-SERVER @ %h
    server string = Samba Server %v
@@ -129,12 +130,24 @@ samba配置中各项名字意义较为明了，也可参看[配置文件](https:
 
 ### 用户管理
 
-samba中使用的账户必须是linux系统中已经存在的账户，但是仍需单独将该系统账户添加到samba中并设置独立的密码（当然，可以同系统用户名密码相同），设置密码示例：
+samba中使用的账户必须是linux系统中已经存在的账户，但是仍需单独将该系统账户添加到samba数据库中，并设置独立的密码（当然，可以同系统用户名密码相同）。
+
+samba用户管理主要使用`smbpasswd`命令。
 
 ```shell
-#添加到samba账户前确保该用户已经存在
-smbpasswd -a <username>  #添加samba用户并设置密码
-smbpasswd <username>  #修改samba用户密码
+#-a添加一个samab用户
+smbpasswd -a <user>  #添加samba用户并设置密码 交互式
+echo -e "<user>\n<passwd>" | smbpasswd -a <user>  #添加用户并读取标准输入内容作为密码
+
+#修改用户密码 可使用-s从stdin读取内容设置密码
+smbpasswd <user>  #交互式
+
+#删除samba用户
+smbpasswd -x <user>
+
+#启用和禁用用户分别使用-d 和 -e
+smbpasswd -d <user>
+smbpasswd -e <user>
 ```
 
 提示：为了安全可以将仅用于samba服务的用户禁用shell登录
@@ -142,6 +155,16 @@ smbpasswd <username>  #修改samba用户密码
 ```shell
 usermod -s /sbin/nologin
 ```
+
+
+
+查看smaba用户
+
+```shell
+pdbedit -L
+```
+
+
 
 # 客户端
 
@@ -164,12 +187,12 @@ hosts: files dns myhostname wins
   - 命令手动挂载
 
     ```shell
-    mount -t cifs -o username=<username>,password=<password> //<SERVER/sharedir> <mountpoint>
+    mount -t cifs -o user=<user>,password=<password> //<SERVER/sharedir> <mountpoint>
     ```
 
     其他可用选项（均以逗号`,`分隔）：
 
-    - `uid=<username>`
+    - `uid=<user>`
     - `gid=<group>`
     - `workgroup=<workgroup>`
     - `ip=<serverip>`
@@ -178,7 +201,7 @@ hosts: files dns myhostname wins
   - 自动挂载（在`/etc/fstab`添加）示例：
 
     ```shell
-    //smb-server/share /share cifs username=testuser,password=testpwd 0 0
+    //smb-server/share /share cifs user=testuser,password=testpwd 0 0
     ```
 
 - smbclient命令
@@ -187,7 +210,7 @@ hosts: files dns myhostname wins
   #显示可用共享
   smbclient -L <host> -U%
   #显示某个用户的可用共享
-  smbclient -L <host> -U <username>
+  smbclient -L <host> -U <user>
   ```
 
 - smbtree命令：显示共享目录树（不建议再有大量计算机的网络上使用此功能）
@@ -211,7 +234,7 @@ hosts: files dns myhostname wins
 
   示例挂载主机host的share到Z盘
   
-  ```powershell
+  ```shell
 net use Z: \\host\share
   ```
   

@@ -13,21 +13,23 @@ NIS（ NetworkInformation Service）提供了一个网络黄页（Yellow Pages�
 
 # 服务端
 
-*以centos为例*。
+主要*以centos为例*。
 
 ## 安装和启用服务
 
-安装 `ypserv` `rpcbind`
+Redhat/CentOS安装 `ypserv` `rpcbind` ，启用`ypserv` `yppasswdd`并设置自启动。
 
-启用`ypserv` `yppasswdd`并设置自启动。
+Debian/Ubuntu安装`nis`。
 
 NIS 服务器同时也当成客户端，参看后文[客户端](#客户端)。
 
 ## 配置服务端
 
-可以先使用`nisdomainname domain-name`（domain-name为要设置为dade域名）以设置临时nis域名，再运行`setup`或` authconfig-tui`（需要python）或` authconfig-gtk`（需要安装gtk相关的图形界面工具）完成下列各项设置。或者根据情况依次进行以下配置：
+可以先使用`nisdomainname domain-name`（domain-name为要设置为dade域名）以设置临时nis域名。
 
-- nis网域设定/etc/sysconfig/network
+Debian/Ubuntu安装nis后会提示输入nisdomain。
+
+- nis网域设定/etc/sysconfig/network（CentOS）
 
   编辑`/etc/sysconfig/network`，添加网域名称和端口，示例：
 
@@ -69,7 +71,9 @@ NIS 服务器同时也当成客户端，参看后文[客户端](#客户端)。
 
 ## 建立帐号资料库
 
-- nis主服务器（master），执行` /usr/lib64/yp/ypinit -m`；如果有nis后备服务器（slave服务器），则其执行`/usr/lib64/yp/ypinit -s`。
+- nis主服务器（master）上执行` /usr/lib64/yp/ypinit -m`；如果有nis后备服务器（slave服务器），则其执行`/usr/lib64/yp/ypinit -s`。
+
+  对于Debian/ubuntu，ypinit的位置可能是`/usr/lib/yp/ypinit`
 
   1. 出现`next host to add:`其自动填入当前nis服务器主机名，如需添加其他nis服务器，添加其主机名到下一个`next host to add:`后即可。按下`ctrl`-`d`即可进入下一步配置。
   2. `is this correct?`询问时，检查信息，如果无误，按下`y`生成用户信息资料库。
@@ -152,45 +156,65 @@ rpcinfo -u localhost ypserv  #2
 
 ## 安装和启用服务
 
-安装`ypbind` `yp-tools`
+CentOS安装`ypbind` `yp-tools`，启用`rpcbind`和`ypbind`服务并设置开机自启动。
 
-启用`rpcbind`和`ypbind`服务并设置开机自启动。
+Debian安装`nis`和`yp-tools`，启用`nis`和`ypbind`。
 
 ## 配置客户端
 
-可以直接运行`setup`或` authconfig-tui`（需要`python`）或` authconfig-gtk`（需要安装gtk相关的图形界面工具）完成下列各项的配置。或者根据情况依次进行以下配置：
+redhat/centos上，推荐使用`setup`或` authconfig-tui`（需要`python`）或` authconfig-gtk`（需要安装gtk相关的图形界面工具）完成下列各项的配置，或者使用authconfig命令配置：
 
-- nis网域设置
+```shell
+authconfig --enablenis --nisdomainname=<domain name> --nisserver=<nis server> --update
+```
 
-  编辑`/etc/sysconfig/network`，添加：
+或者按照以下步骤进行以下配置：
 
-  ```shell
-  NISDOMAIN=cluster  #cluster换成具体的域名
-  ```
+1. nis网域设置
 
-- 主配置文件/etc/yp.conf
+   使用`nisdomainname <domain name>`命令配置，或者编辑`/etc/sysconfig/network`（CentOS），添加：
 
-  编辑`/etc/yp.conf`，添加类似：
+   ```shell
+   NISDOMAIN=cluster  #cluster换成具体的域名
+   ```
 
-  ```shell
-  domain domain-name server 192.168.10.1  #domainname换成实际的域名
-  ```
+2. 主配置文件`/etc/yp.conf`
 
-- 服务搜索顺序/etc/nsswitch.conf 
+   编辑`/etc/yp.conf`，添加类似：
 
-  `/etc/nsswitch.conf`用于管理系统中多个配置文件查找的顺序。编辑该文件，在`passwd`、`shadow`和`group`添加`nis`（或`nisplus`），类似：
+   ```shell
+   domain domain-name server 192.168.10.1  #domainname换成实际的域名
+   ```
 
-  ```shell
-  passwd:  files nis
-  shadow:  files nis
-  group:  files nis
-  ```
+3. 服务搜索顺序文件`/etc/nsswitch.conf `
 
-- 系统认证/etc/sysconfig/authconfig
+   `/etc/nsswitch.conf`用于管理系统中多个配置文件查找的顺序。
 
-  编辑` /etc/sysconfig/authconfig`， 修改`USENIS`的值为`yes` 。
+   编辑该文件，在`passwd`、`shadow`和`group`添加`nis`（或`nisplus`），类似：
 
-- 如有需要，在hosts中添加相关解析。
+   ```shell
+   passwd:  files nis
+   shadow:  files nis
+   group:  files nis
+   ```
+
+4. 系统认证
+
+   - Redhat/CentOS
+
+     编辑` /etc/sysconfig/authconfig`， 修改`USENIS`的值为`yes` 。
+
+   - Debian/Ubuntu
+
+     编辑`/etc/pam.d/common-session `，添加一行：
+
+     ```shell
+     session optional        pam_mkhomedir.so skel=/etc/skel umask=077
+     ```
+
+5. 在hosts中添加相关解析（可选）
+
+6. 可能需要启动或重启nis客户端服务
 
 ## 测试客户端
 

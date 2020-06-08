@@ -1,4 +1,5 @@
 #!/bin/sh
+set -eu
 vm_name=centarm
 
 arch=aarch64

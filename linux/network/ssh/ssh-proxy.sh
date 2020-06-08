@@ -140,7 +140,8 @@ $localhost_comment
 ++++++++
 ssh-port:$localPort
 ssh-user:$localUser
-proxy-port:$remotePort
+proxy-port:$proxyPort
+remote-port:$remotePort
 target-host <-- remote forwarding --> $remoteHost
 " >$ssh_proxy_info_file
 
