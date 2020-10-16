@@ -2,6 +2,25 @@
 
 以`[]`包含表示其为一个可选内容，例如`net user test test /add [/domain]`的`[\domain]`表示新建用户要加入的域（如果不些表示加入本地域）。
 
+# powershell
+powershell不能执行脚本。使用管理员打开powershell执行：
+```powershell
+Set-ExecutionPolicy RemoteSigned
+```
+
+module管理：
+```shell
+# 安装
+Install-Module -Name xxx
+# 查询已安装
+Get-InstalledModule
+# 移除
+Uninstall-Module -Name xxx
+# 搜寻
+Find-Module -Name xxx
+```
+
+
 # 系统
 
 ```powershell
@@ -147,4 +166,4 @@ net use \\ip\ipc$ /del  #删除IPC链接
 - sfc /scannow------Windows文件保护
 - eventvwr------事件查看器
 
-# 
+#
