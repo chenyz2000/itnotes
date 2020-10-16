@@ -6,7 +6,7 @@ VNC可是指一种通信协议——[Virtual Network Computing](https://en.wikip
 
 VNC工具分为服务端和客户端，服务端提供两种服务方式：
 
-- 物理会话：直接控制物理显示器显示的内容，所有连接上的用户看到的是同一图像。
+- 物理会话：直接显示物理显示器的图像，所有连接上的用户看到的是同一图像。
 - 虚拟会话：同时运行多个虚拟会话，各个会话图像不同。
 
 # 常见VNC实现
@@ -21,7 +21,7 @@ VNC作为一种通用协议，现有多种实现工具：
 
 - [TurboVNC](https://turbovnc.org/)
 
-  TightVNC的分支，特点是对图形传输方面的优化。
+  TightVNC的分支，特点是对图形传输方面的优化。（可配合使用VirtualGL增强远程3D支持）
 
 - [RealVNC](http://www.realvnc.com)
 

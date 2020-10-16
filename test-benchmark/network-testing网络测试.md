@@ -105,7 +105,7 @@ mtr --report -c 10 -n z.cn  #检测z.cn的traceroute
   - `ibstat`或`ibstatus`  基本信息和状态
   - `ibv_devices`  ib卡GUID信息
 
-- 带宽和延迟测试`ib_send_bw` 和 `ib_send_lat` 
+- 带宽和延迟测试`ib_write_bw` 、`ib_send_bw` 和 `ib_send_lat` 
 
   - 确保一台服务器已经开启opensmd服务，所有服务器启用了openibd服务，使用`ibstat`查看ib卡是否已经就绪，节点互相可ping或ibping通信。
 

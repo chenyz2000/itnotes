@@ -1321,7 +1321,7 @@ done
 
 ### 参数替换
 
-以下写法中，`param`为参数名，`val`为新的值。
+以下写法中，`param`为参数名，`val`为新的值（`val`也可以引用一个变量）。
 
 | 语法            | 关键符号 | 参数值不为空 | 参数值为空                      |
 | :-------------- | :------: | :----------- | ------------------------------- |
@@ -1332,7 +1332,9 @@ done
 
 ```shell
 test=''
+val=world
 echo "${test:-hello} -- $test"  #hello --
+echo "${test:-$val} -- $test"  #world --
 
 echo "${test:+hello} -- $test"  #hello --  hello
 

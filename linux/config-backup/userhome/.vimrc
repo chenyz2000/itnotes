@@ -159,13 +159,13 @@ Plug 'sbdchd/neoformat'
 
 "代码补全
 "pacman -S python-pynvim " pip install pynvim 
-if has('nvim')
-  Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-else
-  Plug 'Shougo/deoplete.nvim'
-  Plug 'roxma/nvim-yarp'
-  Plug 'roxma/vim-hug-neovim-rpc'
-endif
+"if has('nvim')
+"  Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+"else
+"  Plug 'Shougo/deoplete.nvim'
+"  Plug 'roxma/nvim-yarp'
+"  Plug 'roxma/vim-hug-neovim-rpc'
+"endif
 
 "语言助手
 "python
@@ -184,7 +184,10 @@ call plug#end()
 "--vim-startify
 
 "--airline
-let g:airline_powerline_fonts = 1  " 支持 powerline 字体
+"-need install powerline fonts:
+"- git clone https://github.com/powerline/fonts.git ~/.fonts
+"- sh ~/.fonts/install.sh
+"let g:airline_powerline_fonts = 1  " 支持 powerline 字体
 let g:airline#extensions#tabline#enabled = 1 "显示窗口tab和buffer
 
 "--indentLine

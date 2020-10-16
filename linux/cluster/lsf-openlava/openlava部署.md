@@ -128,7 +128,14 @@ lsadmin ckconfig
 
 # 排错
 
-- 查看log
+- 查看log目录
+
+  查看配置文件：
+
+  ```shell
+  badmin ckconfig
+  lsadmin ckconfig
+  ```
 
 - 节点的`openlava status`各项服务正常启动，但状态为`unreach`，查看该节点`sbatch`日志提示`Unable to reach slave batch server`
 
@@ -141,5 +148,15 @@ lsadmin ckconfig
   ```shell
   192.168.1.1 c01 g0101
   ```
+
+- bhosts中MAX值为1（而实际给予的值比1大）
+
+  查看log目录中的文件
+
+  lim日志提示：
+
+  > loadEvents: unexpected error while reading lim.events: Bad event in lim.events
+
+  删除work/lim.events文件
 
   

@@ -1,5 +1,13 @@
 [TOC]
 
+# 查看分区blocksize
+
+```shell
+stat  <分区挂载点> 
+```
+
+在输出信息中可以看到IO block大小。
+
 # df卡住
 
 ```shell

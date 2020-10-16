@@ -1,24 +1,13 @@
 [user]
 	name = levinit
 	email = levinit@outlook.com
-[credential]
-	helper = store
 [core]
-	editor = vim
-	quotepath = false
-[color]
-	ui = true
-[format]
-	pretty = oneline
-[merge]
-	tool = diffuse
-[filter "lfs"]
-	required = true
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
-[cola]
-	spellcheck = false
-	blameviewer = git gui blame
-[diff]
-	tool = xxdiff
+	excludesfile = /Users/levin/.gitignore_global
+[difftool "sourcetree"]
+	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
+	path = 
+[mergetool "sourcetree"]
+	cmd = /Applications/Sourcetree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
+	trustExitCode = true
+[commit]
+	template = /Users/levin/.stCommitMsg

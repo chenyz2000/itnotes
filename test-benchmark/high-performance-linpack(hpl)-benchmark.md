@@ -83,6 +83,8 @@ HPL（High Performance Linpack）是针对现代**并行计算集群**的测试�
 
 编译HPL需要一些常见的基础的工具支持，如gcc、gcc-c++、gcc-gfortran、线性代数子程序包BLAS（参看后文中关于blas和blas各种实现的介绍）或者向量信号图像处理库VSIPL。
 
+其中`gcc`、`gcc-c++`等基础库是必须有的。
+
 HPL测试常用组合选择：
 
 - HPL + intel工具集[Intel® Parallel Studio XE](https://software.intel.com/en-us/intel-parallel-studio-xe)（intel编译器 + intel mkl + intel-mpi）
@@ -115,10 +117,44 @@ HPL测试常用组合选择：
 
 # HPL安装
 
-1. 下载[hpl](http://www.netlib.org/benchmark/hpl/)，解压后进入hpl目录。
+下载[hpl](http://www.netlib.org/benchmark/hpl/)，解压后进入hpl目录。
 
-2. 复制子目录setup下Make文件（如setup/Make.Linux_Intel64）到当前目录，根据具体情况，对hpl的Make编译文件进行修改。
+如果安装有gcc、mpich、blas等开源库，且在环境变量中已经生效，一般可直接按照普通的编译三步骤编译即可：
 
+```shell
+./configure
+make
+make install
+```
+
+当然也可以根据需要调整相关编译参数再编译，参看源码包中的INSTALL文件以以下示例步骤编译。
+
+
+
+1. 修改`Make.<arch>`文件
+
+   源码中`setup`目录下已经存在一些模板文件，根据需要选择合适的模板，可执行`sh ./config.guess`获取当前系统架构信息（仅供参考）。
+
+   如使用intel的cpu时可能会采用intel套件（intel编译器、mkl数学库、intel mpi）进行编译，setup目录中已经提供了一个`Make.Linux_Intel64`（用于Linux发行版系统），简单修改即可。
+
+   `setup`目录中的模板可能不满足当前编译场景需要的情况下（例如需要改动参数过多），不如根据当前系统安装的编译器和依赖库等重新生成一份`Make.UNKOWN`文件，以满足用户自行修改编译的需要。
+
+   执行`setup`目录的`make_generic`脚本将以`setup/Make.UNKOWN.in`文件为模板，根据当前系统环境变量情况修，生成一份`Make.UNKOWN`文件：
+
+   ```shell
+bash setup/make_generic
+   #复制生成的setup/Make.UNKNOWN到hpl源码根目录下并根据需要改名为Make.<arch>，<arch>部分以架构命名，如Make.aarch64
+cp setup/Make.UNKOWN ./Make.aarch64
+   ```
+
+   提示：`Make.UNKOWN`修改后的`<arch>`名字其实也是随意的，只是方便区分而已。
+
+   
+
+   
+
+   `Make.<arch>`文件中重要配置行的说明：
+   
    - ARCH:  必须与文件名 `Make.<arch>`中的`<arch>`一致
 
    - TOPdir: 指明 hpl 程序所在的目录
@@ -134,68 +170,22 @@ HPL测试常用组合选择：
    - HPL_OPTS: 包含采用什么库、是否打印详细的时间、L广播参数等，若
 
      - 采用 FLBAS 库则置为空
-     - 采用 CBLAS 库为`-DHPL_CALL_CBLAS`
+  - 采用 CBLAS 库为`-DHPL_CALL_CBLAS`
      - 采用 VSIPL  为`-DHPL_CALL_VSIPL`
 
      `-DHPL_DETAILED_TIMING`为打印每一步所需的时间，默认不打印
 
      `-DHPL_COPY_L`为在  L 广播之前拷贝 L，默认不拷贝
-
-   - CC:  C 语言编译器
-
-   - CCFLAGS: C 编译选项
-
-   - LINKER: Fortran 77 编译器
-
-   - LINKFLAGS: Fortran 77 编译选项(Fortran 77 语言只有在采用 Fortran 库时才需要)
-
-     
-
-   参看以下示例：
-
-   示例1：使用intel工具集编译用于intel x86_64 CPU上测试的HPL。
-
-   安装和配置intel工具集工具。
-
-   在hpl源码目录中，复制`setup/Make.Linux_Intel64`到hpl源码根目录下，该文件作者已经配置好，只要intel工具环境变量无误，编译器、mkl和mpi相关变量基本无需修改：
-
-   ```shell
-   #TOPdir修改为当前目录（pwd，当前所在的hpl源码目录）
-   TOPdir       = /root/hpl-2.3
-   ```
-
-   示例2：使用GNU编译器+openblas+mpich（均从包管理安装）编译用于aarch64 CPU上测试的HPL。
-
-   安装
-
-   ```shell
-   #blas、mpi和编译器等
-   dnf install -y openblas-devel mpich-devel gcc gcc-c++
    
-   #或者将mpich变量写入.bashrc或/etc/profile.d/下面的.sh文件中
-   export PATH=/usr/lib64/mpich/bin:$PATH
-   export LD_LIBRARY_PATH=/usr/lib64/mpich/lib:$LD_LIBRARY_PATH
-   ```
+   - CC:  C 语言编译器
+   
+- CCFLAGS: C 编译选项
+  
+- LINKER: Fortran 77 编译器
+  
+- LINKFLAGS: Fortran 77 编译选项(Fortran 77 语言只有在采用 Fortran 库时才需要)
 
-   在hpl源码目录中，复制`setup/Make.UNKNOWN Make`到hpl源码根目录下改名为`Make.aarch64`，参考以下内容修改该文件：
-
-   ```shell
-   ARCH         = aarch64  #名字和文件名中的Make.后面的字符要保持一致
-   TOPdir       = $(HOME)/hpl-2.3
-   #以centos为例，mpich安装后位于/usr/lib64/mpich
-   #如果自行编译，则需要根据具体情况修改
-   MPdir        = /usr/lib64/mpich
-   #如果非包管理安装mpich，该include目录应该位于mpich的安装目录下
-   MPinc        = -I /usr/include
-   MPlib        = $(MPdir)/lib/libmpich.a
-   #如果非包管理安装blas/lapack或其他数学库，则需要自行指定
-   LAdir        = /usr/lib64
-   LAlib        =  /usr/lib64  #同上
-   ```
-
-   *常见的x86_64 intel复制文件`/setup/Make.Linux_Intel64`到hpl源码目录进行修改，但实际内容差不多，只是命名区分而已。arch名字其实也是随意的，只要保持`Make.xxx`文件的`xxx`与该文件中`ARCH`的值一致即可。*
-
-3. 编译安装：`make arch=xxx`（这里的xxx和上面的arch值一致即可）
+2. 编译安装
 
    ```shell
    #示例：文件名为Make.Linux_Intel64 文件中arch为Linux_Intel64
@@ -205,7 +195,74 @@ HPL测试常用组合选择：
 
    编译后的可执行文件生成在以arch值为名目录中，该目录在hpl源码目录下的bin目录下（如Linux_Intel64编译生成在目录`bin/Linux_Intel64/`下），目录中包含xhpl可执行文件及HPL.dat。
 
+   提示：如果之前使用其他`Make.<arch>`文件编译过，make之前应当执行`make clean`。
+
+   编译后的可执行文件一般在源码目录下`bin/<arch>`中。
+
+## 示例：使用intel工具集编译
+
+复制`setup/Make.Linux_Intel64`到hpl源码根目录下，编辑源码根目录下的`Make.Linux_Intel64`：
+
+```shell
+##名字和文件名中的Make.后面的字符要保持一致
+ARCH = Linux_Intel64
+#TOPdir修改为当前目录（pwd，当前所在的hpl源码目录）
+TOPdir       = /root/hpl-2.3
+
+#该文件作者已经配置好，只要intel套件的各个环境变量无误，该文件后续基本无需修改即可通过编译
+```
+
+保存后执行`make arch=Linux_Intel64`即可（清除编译生成的文件`make clean arch=Linux_Intel64`） 。
+
+## 示例：使用GNU编译器+openblas+mpich编译
+
+1. 安装编译器、mpi、blas等
+
+   ```shell
+   #blas、mpi和编译器等 rhel/centos需要epel源安装openblas
+   dnf install -y openblas-devel mpich-devel gcc gcc-c++
+   
+   #或者将mpich变量写入.bashrc或/etc/profile.d/下面的.sh文件中
+   export PATH=/usr/lib64/mpich/bin:$PATH
+   export LD_LIBRARY_PATH=/usr/lib64/mpich/lib:$LD_LIBRARY_PATH
+   ```
+
+2. 生成`Make.UNKOWN`
+
+   源码setup目录中的模板可能满足不了编译需要或者需要改动参数过多，不如根据当前系统安装的编译器和依赖库等重新生成一份`Make.UNKOWN`文件，以满足用户自行修改编译的需要：
+
+   ```shell
+   bash setup/make_generic
+   #复制生成的setup/Make.UNKNOWN到hpl源码根目录下并根据需要改名为Make.<arch>，<arch>部分以架构命名，如Make.aarch64
+   cp setup/Make.UNKOWN ./Make.aarch64
+   ```
+
+   提示：`Make.UNKOWN`修改后的`<arch名>`字其实也是随意的，只是方便区分而已。
+
+3. 编辑`Make.aarch64`文件：
+
+   ```shell
+   ARCH         = aarch64  
+   TOPdir       = $(HOME)/hpl-2.3
+   #以centos为例，yum或dnf安装mpich后，其位于/usr/lib64/mpich
+   #如果自行编译，则需要根据具体情况修改
+   MPdir        = /usr/lib64/mpich
+   #如果非包管理安装mpich，该include目录应该位于mpich的安装目录下
+   MPinc        = -I /usr/include
+   MPlib        = $(MPdir)/lib/libmpich.a
+   #如果非包管理安装blas/lapack或其他数学库，则需要自行指定
+   LAdir        = /usr/lib64
+   LAinc        = /usr/include
+   LAlib        =  $(LAdir)  #同上
+   ```
+
+4. 编译
+
+   保存后执行`make arch=Linux_Intel64`即可。
+
 # HPL测试
+
+可参看源码目录中的`TUNNING`文件以及`testing`目录中的内容。
 
 在集群测试中，一般将将测试程序xhpl及HPL.dat等文件放置到集群共享目录中。
 

@@ -48,8 +48,9 @@ ssh host
    提示：上传时需要输入密码。
 
    公钥内容将添加到登录用户在服务器的`~/.ssh/authorized_keys`文件中。
-   
+
    确保`authorized_keys`文件的权限为600，`.ssh`文件夹权限为700。
+
 
 ## 别名登录
 
@@ -57,13 +58,13 @@ ssh host
 
 在`~/.ssh/config`（如无该文件则创建之）中配置：
 
-```shell
+```
 Host host1 #host1为所命名的别名
-  hostname xxx.xxx.xxx.xxx #登录地址
-  user user1  #用户名
-  #port 1998  #如果修改过默认端口则指定之
-  #IdentityFile  ~/path/to/id_rsa.pub #如果要指定公钥
-  #IdentitiesOnly yes #只使用指定的公钥进行认证
+hostname xxx.xxx.xxx.xxx #登录地址
+user user1  #用户名
+#port 1998  #如果修改过默认端口则指定之
+#IdentityFile  ~/path/to/id_rsa.pub #如果要指定公钥
+#IdentitiesOnly yes #只使用指定的公钥进行认证
 ```
 
 登录时直接使用`ssh host1`即可。
@@ -82,7 +83,7 @@ Host host1 #host1为所命名的别名
   ssh user@jump-host
   ssh user@target-host
   ```
-  
+
 - 直接从客户端执行命令登录到目标主机
 
   - 使用`-t`分配伪终端
@@ -100,26 +101,28 @@ Host host1 #host1为所命名的别名
     ```shell
     #注意，跳板机的端口需要直接在地址后面添加 以冒号分隔
     ssh -J user@jum[:port] user@target -p <port>
+
     #如有多个跳板机使用逗号隔开 #客户端->jump1服务器->jump2服务器->target服务器
     ssh -J user@jump1,user@jump2:2333 user@target -p 22
+
     #通过server1跳跃到server2 使用X转发打开server上的firefox
-ssh -J user@server1 user@server2 -X firefox
+    ssh -J user@server1 user@server2 -X firefox
     ```
 
     `-J`是`ProxyJump`的快捷使用方式。使用`ProxyJump`实现Jump直接跳跃登录功能：
-    
+
     ```shell
-ssh user@target -o ProxyCommand='ssh user@jump-host -W %h:%p'
+    ssh user@target -o ProxyCommand='ssh user@jump-host -W %h:%p'
     ```
 
     或者在`~/.ssh/config`中进行配置如下内容，然后使用`ssh target`直接登录到target：
-    
+
     ```shell
     Host jump #跳板机配置
         HostName 10.10.1.1
         Port 2333
         User user1
-      
+
     Host target #目标主机配置
         HostName 10.10.10.10
         Port 1010
@@ -157,16 +160,16 @@ ssh user@target -o ProxyCommand='ssh user@jump-host -W %h:%p'
   > 允许转发认证代理的连接
 
   逐步跳跃登录的方式：
-  
+
   ```shell
   #1. 从客户端登录到跳板机 并将密钥交给agent 以供跳板机使用
   ssh -A user@jump-host
   #2. 从跳板机登录到目标主机将使用来自客户端的密钥
   ssh user@target-host
   ```
-  
+
   分配伪终端`-t`登录的方式：
-  
+
   ```shell
   ssh -t -A user@jump-host ssh -t user@target-host
   ```
@@ -223,16 +226,16 @@ vim scp://user@host[:port]//path/to/file
 
 - 服务端
   - xorg-server，xorg-xauth，启动X服务。
-  
+
   - 确保`sshd_config`关于X的配置如下：
-  
+
     ```shell
     X11Forwarding yes
     X11DisplayOffset 10
     X11UseLocalhost no
     ```
 - 客户端
-  
+
   - 有X 环境（windows需要安装x实现如Xming等）
 
 ```shell
@@ -353,7 +356,6 @@ ssh -R [bind_address:port:<local-host>:<local-port> [<remote-user>@]<remote-host
 ```
 
 
-
 应用场景举例：内网穿透。在内网服务器与公网服务只见建立反向隧道，转发公网服务器的2222端口到内网服务器的22端口，用户访问公网服务器的2222端口即访问内网服务器的22端口。
 
 示例，转发远程主机的9500端口到本地主机的5900：
@@ -409,8 +411,6 @@ autossh可以在监测ssh连接状态，当ssh断开后会自动重新发起连�
 ```shell
 autossh -M 2333 ssh -fCNR 8080:localhost:80 user@remote-host
 ```
-
-
 
 一个autossh的systemd units文件示例，可放置于`/etc/systemd/system/autossh.service`或`$HOME/.config/systemd/user/`下。
 
@@ -520,7 +520,7 @@ user@host:/remote/folder /mount/point  fuse.sshfs noauto,x-systemd.automount,_ne
 - 登录记录查看
 
   - 登录历史
-    - 用户最近登录情况：`lastlog` 
+    - 用户最近登录情况：`lastlog`
     - 登录成功的记录：`last`
     - 登录失败的记录：`lastb`
   - 当前登录用户
@@ -551,7 +551,7 @@ user@host:/remote/folder /mount/point  fuse.sshfs noauto,x-systemd.automount,_ne
 
 
 - 更改默认的22端口
-  
+
 
 减少被工具批量扫描的几率。修改服务器的`/etc/ssh/sshd_config`文件中的`Port` 值为其他可用端口。
 
@@ -567,12 +567,12 @@ user@host:/remote/folder /mount/point  fuse.sshfs noauto,x-systemd.automount,_ne
 - 使用密钥而非密码登录
 
   安全但不方便。
-  
+
   ```shell
   ssh-keygen  #或者ssh-keygen -t rsa 4096 客户机生成密钥
-ssh-copy-id -p 23579 user@host  #上传公钥到服务器
+  ssh-copy-id -p 23579 user@host  #上传公钥到服务器
   ```
-  
+
   注意，dsa密钥已经证实为不安全，rsa密钥位数过低也较为不安全，推荐至少4096位。
 
 
@@ -632,6 +632,8 @@ ssh命令中使用参数`-v`可输出详细的调试信息
 
 ## 密钥问题
 
+- 非root用户应上传公钥仍不能使用密钥登录（提示输入密码）：可能是selinux出于enforcing模式。
+
 - > error fetching identities for protocol 1: agent refused operation
 
   ```shell
@@ -671,11 +673,11 @@ ssh命令中使用参数`-v`可输出详细的调试信息
 
   - `GSSAPIAuthentication` 是否允许使用基于 GSSAPI 的用户认证，默认值为"no"。
   - `GSSAPICleanupCredentials` 是否在用户退出登录后自动销毁用户凭证缓存，默认值为"yes"。
-  
+
   若服务器开启了该验证机制，但客户端并未使用该身份验证机制，则会导致验证过程出现延迟。
-  
+
   释掉服务端`/etc/ssh/sshd_config`中的`GSSAPI`相关行，或者设置相关行值为`no`，重启sshd服务。
-  
+
 - 服务端设置了DNS查询
 
   服务器根据客户端IP进行DNS查询，但DNS因为（各种网络因素）查询时间过长或者查询失败。`/etc/ssh/sshd_config`中的`UseDNS`设置为`no`，重启sshd服务。
@@ -705,7 +707,7 @@ ssh命令中使用参数`-v`可输出详细的调试信息
   ```
 
   如果无需严格的主机密钥检查，也可以将已知主机信息文件指向`/dev/null`。
-  
+
 - `command not found` 执行远程命令提示找不到命令
 
   使用ssh服务器上的**非root用户**执行位于其`/sbin`（或`/usr/sbin/`）目录下的程序时，提示"command not found"，解决方法：
@@ -717,7 +719,7 @@ ssh命令中使用参数`-v`可输出详细的调试信息
   - 使用绝对路径执行，例如：
 
     ```shell
-  /usr/sbin/ip a
+    /usr/sbin/ip a
     /usr/sbin/lspci
     ```
 
@@ -726,7 +728,7 @@ ssh命令中使用参数`-v`可输出详细的调试信息
   检查服务端`/etc/ssh/sshd_config`是否关闭了密码登录。如需开启密码登录，修改该行：
 
   ```
-   PasswordAuthentication no #注释该行或值改为yes 再重启sshd服务
+  PasswordAuthentication no #注释该行或值改为yes 再重启sshd服务
   ```
 
 - 协议不支持问题
@@ -738,9 +740,9 @@ ssh命令中使用参数`-v`可输出详细的调试信息
     服务端ssh版本过低，不支持`diffie-hellman-group1-sha1`等协议，在其`/etc/ssh/ssh_config`或用户家目录的`~/.ssh/config`中添加：
 
     ```shell
-  KexAlgorithms +diffie-hellman-group1-sha1
+    KexAlgorithms +diffie-hellman-group1-sha1
     ```
-    
+
   - `no compatible cipher.The server supports these cipher:  aes128-ctr,aes192-ctr,aes256-ctr`
 
     服务端不支持`aes128`等加密协议。在`/etc/ssh/ssh_config`或用户家目录的`~/.ssh/config`中添加：
@@ -749,4 +751,3 @@ ssh命令中使用参数`-v`可输出详细的调试信息
     Ciphers aes128-ctr,aes192-ctr,aes256-ctr,aes128-cbc,3des-cbc,aes192-cbc,aes256-cbc
     ```
 
-    

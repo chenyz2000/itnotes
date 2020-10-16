@@ -12,29 +12,36 @@ net user 用户名 密码 /add
 
 如果需要将用户添加进超级管理员，可以使用下边命令（只是共享写读需要的话，可以不用加入超级管理员角色）：
 
-```
+```powershell
 net localgroup administrators 用户名 /add
 ```
 
  共享文件夹：
 
 ```powershell
-net share ShareFile=E:\要共享的文件夹 /GRANT:用户名,FULL
-net share
+#添加共享   可设置注释
+net share <share_name>=<dir-path> /GRANT:用户名,FULL
+net share <share_name>=<dir-path> /remark:"share comment."
+
+net share <share_name> /del  #删除共享
+net share  #查看已经共享列表
 ```
 
 ## Linux
 
 安装`samba`，启用`smb`和`nmb`服务（或名`smbd`或`nmbd`）。
 
-samba使用445 TCP/UDP端口：
+- selinux: off
 
-- nmb
-  - TCP 445 ：Microsoft-DS Active Directory、Windows 共享资源（TCP）
-  - UDP 445 ：Microsoft-DS SMB 文件共享（UDP）
-- smb
-  - UDP 137： NetBIOS 命名服务（WINS）
-  - UDP 138 ：NetBIOS 数据包
+
+- firewall: samba使用445 TCP/UDP端口：
+
+  - nmb
+    - TCP 445 ：Microsoft-DS Active Directory、Windows 共享资源（TCP）
+    - UDP 445 ：Microsoft-DS SMB 文件共享（UDP）
+  - smb
+    - UDP 137： NetBIOS 命名服务（WINS）
+    - UDP 138 ：NetBIOS 数据包
 
 ### 配置
 
@@ -170,13 +177,7 @@ pdbedit -L
 
 ## linux
 
-安装`cifs-utils`或`samba-client`（或名`smbclient` ）
-
-如果samba主机是windows，在`/etc/nsswitch.conf`的host行添加wins，示例：
-
-```shell
-hosts: files dns myhostname wins
-```
+安装`cifs-utils`和`samba-client`（或名`smbclient` ）
 
 - 挂载
 
@@ -187,7 +188,7 @@ hosts: files dns myhostname wins
   - 命令手动挂载
 
     ```shell
-    mount -t cifs -o user=<user>,password=<password> //<SERVER/sharedir> <mountpoint>
+    mount -t cifs -o username=<user>,password=<password> //<SERVER/sharedir> <mountpoint>
     ```
 
     其他可用选项（均以逗号`,`分隔）：
@@ -198,17 +199,19 @@ hosts: files dns myhostname wins
     - `ip=<serverip>`
     - `iocharset=<utf8>`
 
+    提示：如果挂载提示`write-protected, mounting read-only`，需要安装`cifs-utils`；如果服务端为windows，类似`C$`这类以`$`结尾的共享名在linux客户端上挂载会出错。
+
   - 自动挂载（在`/etc/fstab`添加）示例：
 
     ```shell
-    //smb-server/share /share cifs user=testuser,password=testpwd 0 0
+    //smb-server/share /share cifs username=testuser,password=testpwd 0 0
     ```
 
 - smbclient命令
 
   ```shell
   #显示可用共享
-  smbclient -L <host> -U%
+  smbclient -L <host>
   #显示某个用户的可用共享
   smbclient -L <host> -U <user>
   ```

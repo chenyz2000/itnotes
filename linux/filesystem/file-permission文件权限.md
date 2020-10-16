@@ -191,16 +191,18 @@ setfacl使用：
 
 - 规则写法：`default:用户类型:名称:权限` （default也可简写为d）
 
+  default也可简写为d，设置默认权限，目录设置默认权限后，目录下新建的文件/子目录将**继承设置的权限**。
+
   用户类型即上文所述的u g m o （user/group/mask/others）；
 
   名称即user的用户名和和group的组名**，mask和others无对应名字，该项留空**；
 
   权限即`rwx-`。
-
+  
   ```shell
   #示例
   setfacl -m u:http:r-- /srv/index.html
-  setfacl -R u:admin:rwx /srv
+  setfacl -Rm d:u:admin:rwx /srv #srv下新建的文件均继承设置的u:admin:rwx
   setfacl -m m::r-x /home
   ```
 

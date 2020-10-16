@@ -48,13 +48,13 @@ End Limit
 限制某个用户在某个节点上可使用的资源示例：
 
 ```shell
-#还可以再对该用户在c01上资源进行限定
+#用户 可用c01 c02 并限定内存cpu等
 Begin Limit
 NAME = limit_for_user1
 USERS = user1
 MEM = 10240
 SLOTS = 8
-HOSTS = c01 
+HOSTS = c01 c02
 End Limit
 ```
 

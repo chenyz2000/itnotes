@@ -264,9 +264,9 @@ web服务器为客户端提供操作系统网络安装源。（也可以使用nf
 
    主要是使用其中的BOOTX64.EFI。
 
-   *若开启了安全启动（UEFI SecureBoot），需要使用shim.efi嵌套调用grub.efi来引导。//todo*
+   *若开启了安全启动（UEFI SecureBoot），需要使用shim.efi嵌套调用grub.efi来引导。
 
-2. 从镜像文件中复制images到tftp根目录下的EFI目录下
+2. 从镜像文件中复制images到tftp根目录下
 
    主要是需要其中的vmlinuz和initrd.img，也可以只复制该2个文件。
 
@@ -282,8 +282,8 @@ web服务器为客户端提供操作系统网络安装源。（也可以使用nf
    #hiddenmenu
    title PXE_Installation
        root (nd)
-       kernel EFI/BOOT/images/pxeboot/vmlinuz ks=http://192.168.0.199/uefi-ks.cfg
-       initrd EFI/BOOT/images/pxeboot/initrd.img
+       kernel /images/pxeboot/vmlinuz ks=http://192.168.0.199/uefi-ks.cfg
+       initrd /images/pxeboot/initrd.img
    title rescue
        root (nd)
        kernel pxelinux.cfg/6/x86_64/vmlinuz rescue askmethod
@@ -317,9 +317,9 @@ web服务器为客户端提供操作系统网络安装源。（也可以使用nf
    
    menuentry 'Install Linux' --class fedora --class gnu-linux --class gnu --class os {
      #inst.stage2要修改为web源的uri
-     linuxefi /BOOT/images/pxeboot/vmlinuz inst.stage2=http://192.168.0.199/os ip=dhcp inst.ks=http://192.168.0.199/ks/uefi-ks.cfg
+     linuxefi /images/pxeboot/vmlinuz inst.stage2=http://192.168.0.199/os ip=dhcp inst.ks=http://192.168.0.199/ks/uefi-ks.cfg
      ##inst.cmdline inst.sshd vnc_options=inst.vnc vncpassword=pwd@vnc
-     initrdefi /BOOT/images/pxeboot/initrd.img #quiet
+     initrdefi /images/pxeboot/initrd.img #quiet
      #inuxefi /BOOT/images/pxeboot/vmlinuz inst.repo=http://192.168.0.199/os inst.ks=http://192.168.0.199/ks/uefi-ks.cfg
    }
    ```

@@ -138,6 +138,7 @@ function ssh_remote_forwarding() {
     echo "++++++++
 $localhost_comment
 ++++++++
+update-time:$(date)
 ssh-port:$localPort
 ssh-user:$localUser
 proxy-port:$proxyPort

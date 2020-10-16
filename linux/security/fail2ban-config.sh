@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 if [[ $USER != root ]]; then
   echo "need root or sudo."
   exit
@@ -21,14 +21,33 @@ maxretry=5
 
 #-----
 
+function install_fail2ban(){
+  if [[ $(which pacman 2>/dev/null) ]]
+  then
+    pacman -Syy fail2ban --no-confirm
+  elif [[ $(which yum 2>/dev/null) ]]
+  then
+    #yum install -y epel-release
+    #yum makecache
+    yum install -y fail2ban
+  elif [[ $(which apt 2>/dev/null) ]]
+  then
+    apt install -y fail2ban
+  else
+    echo --
+  fi
+
+}
+
+
 function check_fail2ban_app() {
-  which pacman 2>/dev/null || pacman -Syy fail2ban --no-confirm
 
   if [[ ! $(which fail2ban-server) ]]; then
     echo "please install fail2ban"
     exit
   fi
 }
+
 
 function add_vnc_auth_filter() {
   echo "[Definition]
@@ -104,12 +123,12 @@ enabled = true
 
 function gen_scripts() {
   #banip
-  echo '#!/bin/sh
+  echo '#!/bin/bash
 sudo fail2ban-client set sshd banip "$@"
 ' >/usr/local/bin/banip
 
   #unbanip
-  echo '#!/bin/sh
+  echo '#!/bin/bash
 case "$@" in
   all)
     sudo fail2ban-client unban --all
@@ -121,30 +140,31 @@ esac
 ' >/usr/local/bin/unbanip
 
   #ignore ip
-  echo '#!/bin/sh
+  echo '#!/bin/bash
 sudo fail2ban-client set sshd addignoreip "$@"
 ' >/usr/local/bin/ignoreip
 
   ##delete ignore ip
-  echo '#!/bin/sh
+  echo '#!/bin/bash
 sudo fail2ban-client set sshd delignoreip "$@"
 ' >/usr/local/bin/delignoreip
 
   ##sshd blacklist
-  echo '#!/bin/sh
+  echo '#!/bin/bash
 jail=$1
 jail=${jail:-sshd}
 sudo fail2ban-client status ${jail}
 
+echo
 echo "usage blacklist [jail_name]
 eg. blacklist sshd
 "
 if [[ $jail == sshd ]]
 then
   echo "=====commands for sshd jail=====
-banip [ip1 ip2]         : ban 1 IP or more IPs, eg, banip 8.8.8.8 9.9.9.9
-unbanip [ip1 ip2]       : unban 1 IP or more IPs
-unbanip all             : unban all IPs
+banip [ip1 ip2]        : ban 1 IP or more IPs, eg, banip 8.8.8.8 9.9.9.9
+unbanip [ip1 ip2]      : unban 1 IP or more IPs
+unbanip all            : unban all IPs
 ignoreip [ip1 ip2]     : ignore 1 IP or more IPs
 delignoreip [ip1 ip2]  : delete a ignored IP"
 fi
@@ -154,6 +174,7 @@ fi
 }
 
 #=====
+install_fail2ban
 check_fail2ban_app
 gen_jail_file
 add_jails
