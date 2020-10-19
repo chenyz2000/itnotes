@@ -131,6 +131,7 @@ xz -d test.xz  #解压
 解压工具：unzip
 
 - `-P`  指定解压密码
+- `-d`  解压到指定目录
 - `-l`  列出压缩包中文件（不解压）
 
 unzip-iconv，为unzip增加了转码补丁，可在解压缩时使用`-O`参数可指定编码格式。
@@ -157,26 +158,24 @@ cat partzip* > files.zip && unzip files.zip #合并分卷并解压
 
 ## .rar
 
-压缩工具：rar 
+压缩工具：rar (非win平台，以及为了更好的跨平台，不建议压缩成rar)
 
 解压工具：unrar
 
-非win平台，以及为了更好的跨平台，不建议压缩成rar
+- `x`  使用完整路径
+- `e`  不使用归档的完整路径（直接解压到当前目录）
 
 ```shell
 rar a test.rar test  #压缩
 unrar test.rar       #解压
+echo password_str | unrar test.rar #使用密码解压
 ```
-
-- `-x`  用绝对路径解压文件
-- `-e`  解压到当前路径
-- `-p`  指定解压密码
 
 分卷解压，直接解压第一个分卷即可，其会自动合并解压所有分卷：
 
 ```shell
 #例如某文件压缩为 file.part1.rar   fiel.part2.rar
-unrar -x file.part1.rar
+unrar file.part1.rar
 ```
 
 

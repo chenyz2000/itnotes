@@ -67,10 +67,15 @@ mtr --report -c 10 -n z.cn  #检测z.cn的traceroute
 
   - 服务端：`iperf -s `
   - 客户端：`iperf -c <server> `
+    - `-t`  持续时间
+    - `-i`  间隔时间
+    - `-w`  TCP window 大小
+    - `-u`  UDP测试
+    - `-P`  多线程
 
   ```shell
   iperf -s [-p port] [-i 2]  #p监听的端口 i报告刷新时间间隔
-  iperf -c <server> [-n filesize] [-p port] [-i 2] [-t 10]  #t测试总时间
+  iperf -c <server> [-n filesize] [-p port] [-i 2] [-t 10]
   ```
 
 - netperf

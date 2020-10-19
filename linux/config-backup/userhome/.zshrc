@@ -114,11 +114,6 @@ function restoreconfigs() {
   done
 }
 
-if [[ $os == Linux ]]; then
-  alias trim='sudo fstrim -v /home && sudo fstrim -v /'
-  # clear 2 weeks ago logs
-  alias logclean='sudo journalctl --vacuum-time=1weeks'
-fi
 
 #===system commands===
 
@@ -169,10 +164,17 @@ elif [[ $os == Darwin ]]; then
 fi
 
 #system commands alias
-if [[ $os == Darwin ]]; then
+if [[ $os == Linux ]]; then
+  alias trim='sudo fstrim -v /home && sudo fstrim -v /'
+  # clear 2 weeks ago logs
+  alias logclean='sudo journalctl --vacuum-time=1weeks'
+elif [[ $os == Darwin ]]; then
   #sudo gem install iStats
   alias tmquickly='sudo sysctl debug.lowpri_throttle_enabled=0'
-  alias tmlist='tmutil listlocalsnapshotdates'
+  alias tmlistsnap='tmutil listlocalsnapshotdates'
+  alias tmlistbackups='tmutil listbackups'
+  alias tmrmsnap=' tmutil deletelocalsnapshots '
+  alias tmrmbackup='sudo tmutil delete '
 fi
 
 #---temporary locale---
@@ -189,7 +191,13 @@ alias lastlog='lastlog|grep -Ev  "\*{2}.+\*{2}"'
 alias ll='ls -lh'
 alias la='ls -lah'
 
-[[ -d $HOME/.local/share/Trash/files ]] && alias rm='mv -f --target-directory=$HOME/.local/share/Trash/files/'
+if [[ -d $HOME/.local/share/Trash/files ]]
+then
+  alias rm='mv -f --target-directory=$HOME/.local/share/Trash/files/'
+elif [[ -d /Users/levin/.Trash ]] 
+then
+  alias rm='mv -f --target-directory=/Users/levin/.Trash'
+fi
 
 alias cp='cp -i'
 
@@ -198,6 +206,7 @@ alias grep='grep --color'
 alias tree='tree -C -L 1 --dirsfirst'
 
 #---network---
+alias ping='ping -c 4'
 # proxychains
 alias px='proxychains4'
 
@@ -219,6 +228,7 @@ alias virtstart='sudo modprobe virtio && sudo systemctl start libvirtd ebtables 
 #scan alive hosts
 alias 'nmap-ports'="sudo nmap -sS $(echo $gateway | cut -d '.' -f 1-3).0/24"
 alias 'nmap-hosts'="nmap -sP $(echo $gateway | cut -d '.' -f 1-3).0/24"
+alias 'nmap-os'="sudo nmap -O $(echo $gateway | cut -d '.' -f 1-3).0/24"
 
 #---vim plugin
 #pacman -S vim-plugin --no-comfirm
@@ -260,5 +270,8 @@ if [[ $os == Darwin && -f /usr/local/bin/R ]]; then
 #export LDFLAGS="-L/usr/local/opt/openblas/lib"
 #export CPPFLAGS="-I/usr/local/opt/openblas/include"
 fi
+
+#Golang
+export  GOPROXY=https://mirrors.aliyun.com/goproxy/,direct
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
