@@ -30,33 +30,58 @@ oflag值为dsync，表示使用同步I/O，每次读取bs指定的块文件大�
 
 随机I/O测试效果好。
 
+```shell
+fio --filename=/path/to/file --bs=4k --size=20G --numjobs=48 --runtime=600  --ioengine=libaio --iodepth=1 --direct=1 --rw=read --time_based --refill_buffers --norandommap --randrepeat=0 --group_reporting --name=fio-read
+```
+
+也可以创建参数文件，读取该文件即可，参数文件fio.conf示例：
+
+```ini
+[global]
+ioengine=libaio
+direct=1
+thread=1
+time_based
+numjobs=1
+group_reporting
+iodepth=128
+filename=/dev/vdb
+runtime=300
+size=50g
+[4k-randwrite]
+bs=4k
+rw=randwrite
+stonewall
+[8k-randwrite]
+bs=8k
+rw=randwrite
+stonewall
+```
+
 重要参数：
 
+- bs  块文件大小
+- bsrange  数据块的大小范围  例如`bsrange=512-2048`
 - ioengine  测试I/O的方法，常用取值：
   - libaio - Linux 原生的异步 I/O（需要安装有libaio包）
   - sync -  同步read / write 操作
   - vsync - 使用 readv / writev，主要是会将相邻的 I/O 进行合并
   - psync - 对应的 pread / pwrite
   - pvsync / pvsync2 - 对应的 preadv / pwritev，以及 preadv2 / p writev2
+- In-depth  请求的io队列深度
 - direct 取值1表示绕过buffer直接写入
 - zero_buffers  初始化系统buffer
 - rw或readdwrite  读写方式，取值：
-  - read 只读 、write只写、 rw读写
-  - randread  随机读、  randwrite  随机写、randrw 随机读写
+  - read只读 write只写 rw读写
+  - randread随机读 randwrite随机写 randrw随机读写
   - trim、randtrim、trimwrite  块设备（仅Linux）
 - rwmixwrite  混合读写模式下写占的比例（百分比）
-- bs  块文件大小
-- bsrange  数据块的大小范围  例如`bsrange=512-2048`
 - size  测试文件大小
 - numjobs  线程数量
 - runtime  测试时间
 - lockmem  测试使用的内存
 - group_reporting  汇总报告结果
 - nrfiles  每个进程生成的文件数量
-
-```shell
-fio -ioengine=psync -filename=/share/fiotest -bsrange=4k-1m -fdatasync=1 -rw=write -size=10g -runtime=60 -name="pingcap"
-```
 
 
 

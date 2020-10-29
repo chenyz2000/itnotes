@@ -1,3 +1,5 @@
+将某个目录（已经包含repodata信息）作为软件源，编写对应的repo文件，文件中的地址信息指向该软件源目录即可。
+
 # 软件包来源
 
 本地源的软件包一般来源：
@@ -51,13 +53,13 @@ mount -o loop ~/centos.iso /srv/repo/iso
    GPL
    ```
 
-## 自定义软件包
+## 自定义目录
 
-将自定义软件包加入或新建为软件源，安装`createrepo`。
+将软件包放到指定目录，将该目录设置为软件源，下称该目录我软件源目录。
 
-建立一个文件夹如`/srv/repo/rpms`，将软件包放到子目录`packages`下。
+建立一个文件夹如`/srv/repo/rpms`，将软件包放到该目录下。
 
-使用`createrepo`工具生成rpm包信息文件目录repodata：
+使用`createrepo`工具生成rpm包信息，存放到软件源根目录下的repodata子目录中信息：
 
 ```shell
 #createrepo <目录名>
@@ -65,11 +67,19 @@ createrepo -v --basedir /srv/repo/rpms -d  /srv/repo/rpms
 #或cd到rpms执行createrepo . 亦可
 ```
 
+*createrepo会递归读取软件源目录的所有层级子目录的rpm信息，因此不必将所有rpm均放到软件源根目录下，可 创建子目录存放方便管理。*
+
 当添加新的rpm包时，可使用`--update`参数更新信息文件：
 
 ```shell
 createrepo -v --update /srv/repo/rpms
 ```
+
+
+
+该软件源如果要通过网络协议让其他主机使用，可以搭建网络服务器（如http服务器、nfs服务器），确保该软件源目录可被其他主机以相关网络协议访问。
+
+例如搭建web服务器，使用http协议为其他主机提供自建的软件源服务，其监听9999端口，`/srv`为web服务的根目录，那么`/srv/repo/rpms`的地址即是：`http://192.168.0.1:9999/repo/rpms`。
 
 # repo文件
 
@@ -98,15 +108,16 @@ gpgcheck=0  #gpg校验  校验1  不校验0
 
   - rsync协议  `rsync://地址`
 
+
 - path代表baseurl值下面的子路径
 
   如果baseurl已经描述完整了路径，也可以省略path值。
 
-# 使用本地源
+# 使用源
 
 将编写的repo文件放置到`/etc/yum.repos.d`下。
 
-如果使用本地源而不连接外网，系统自带的repo无法使用，应当将这些repo文件移除。
+如果使用本地源而不连接外网，（CentOS）系统自带的repo无法使用，应当将这些repo文件移除（或修改扩展名，只有`.repo`结尾的文件才被使用）。
 
 ```shell
 yum clean all  #清除原有repo缓存

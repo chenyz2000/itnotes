@@ -34,7 +34,7 @@ export UPDATE_ZSH_DAYS=99
 # DISABLE_AUTO_TITLE="true"
 
 # Uncomment the following line to enable command auto-correction.
-ENABLE_CORRECTION="true"
+#ENABLE_CORRECTION="true"
 
 # Uncomment the following line to display red dots whilst waiting for completion.
 # COMPLETION_WAITING_DOTS="true"
@@ -88,7 +88,7 @@ echo -e "+++ $(uname -rsnm) +++
 \e[1;32m$gateway\e[0m <-- \e[1;31m$innerip\e[0m"
 
 # ******** important! files backup******
-configs_files=(.ssh/config .zshrc .gitconfig .vimrc) #.bashrc  .makepkg.conf # .bash-powerline.sh)
+configs_files=(.ssh/config .condarc .zshrc .gitignore_global .gitconfig .vimrc) #.bashrc  .makepkg.conf # .bash-powerline.sh)
 path_for_bakcup=~/Documents/it/itnotes/linux/config-backup/userhome
 
 function backupconfigs() {
@@ -153,10 +153,10 @@ elif [[ $os == Darwin ]]; then
   }
 
   #export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles
-  export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles
-  #export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.aliyun.com/homebrew/homebrew-bottles
-  alias outdate='brew outdated'
-  alias update='brew update &&  brew outdated'
+  #export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles
+  export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.aliyun.com/homebrew/homebrew-bottles
+
+  alias update='brew update && echo ---outdated---  && brew outdated'
   alias upgrade='brew upgrade --cask && brew upgrade'
   alias pkgclean='brew cleanup'
   alias finderplugin='brew cask install qlcolorcode qlstephen qlmarkdown quicklook-json qlimagesize quicklookase qlvideo webpquicklook'
@@ -196,7 +196,7 @@ then
   alias rm='mv -f --target-directory=$HOME/.local/share/Trash/files/'
 elif [[ -d /Users/levin/.Trash ]] 
 then
-  alias rm='mv -f --target-directory=/Users/levin/.Trash'
+  #alias rm='mv -f --target-directory=/Users/levin/.Trash'
 fi
 
 alias cp='cp -i'
@@ -208,6 +208,8 @@ alias tree='tree -C -L 1 --dirsfirst'
 #---network---
 alias ping='ping -c 4'
 # proxychains
+PROXYCHAINS_SOCKS5=1086
+[[ $os == Linux ]] &&  PROXYCHAINS_SOCKS5=1080
 alias px='proxychains4'
 
 # ssh server
@@ -250,28 +252,45 @@ function install_fortune_gushici() {
 fortune -e tang300 song100 2>/dev/null #先秦 两汉 魏晋 南北朝 隋代 唐代 五代 宋代 #金朝 元代 明代 清代
 
 #-----DEV-----
-# rust chinese mirror
-export RUSTUP_DIST_SERVER=https://mirrors.tuna.tsinghua.edu.cn/rustup
-#rustup install stable
-
+#-npm
 #npm -g list --depth=0
 alias npmlistg='npm -g list --depth=0'
 alias npmtaobao='npm config set registry https://registry.npm.taobao.org'
 
-#python
+#-python
 alias python=python3
 alias pip=pip3
 alias pipoutdated='pip list --outdated'
 alias pipupgrade='pip install --upgrade $(echo $(pip list --outdate|sed -n "3,$ p"|cut -d " " -f 1))'
 
-#R
+#-R
 if [[ $os == Darwin && -f /usr/local/bin/R ]]; then
 #R use openblas but mac provides BLAS
 #export LDFLAGS="-L/usr/local/opt/openblas/lib"
 #export CPPFLAGS="-I/usr/local/opt/openblas/include"
 fi
 
-#Golang
+#-Golang
 export  GOPROXY=https://mirrors.aliyun.com/goproxy/,direct
+
+
+#-anaconda/miniconda
+#prevent auto active conda env, execute:
+#conda config --set auto_activate_base false
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/usr/local/Caskroom/miniconda/base/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/usr/local/Caskroom/miniconda/base/etc/profile.d/conda.sh" ]; then
+        . "/usr/local/Caskroom/miniconda/base/etc/profile.d/conda.sh"
+    else
+        export PATH="/usr/local/Caskroom/miniconda/base/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

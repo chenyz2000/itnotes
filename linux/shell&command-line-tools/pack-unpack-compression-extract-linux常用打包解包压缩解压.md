@@ -167,7 +167,7 @@ cat partzip* > files.zip && unzip files.zip #合并分卷并解压
 
 ```shell
 rar a test.rar test  #压缩
-unrar test.rar       #解压
+unrar test.rar  [path-to-target]     #解压 (可指定解压目录)
 echo password_str | unrar test.rar #使用密码解压
 ```
 
