@@ -39,6 +39,8 @@ VNC作为一种通用协议，现有多种实现工具：
 
 以下以tightvnc系的tigervnc为主，tightvnc命令与之类似。
 
+re dhat/centos安装`tigervnc-server tigervnc-server-module`
+
 ## 虚拟会话
 
 - 启动会话
@@ -147,15 +149,17 @@ x11vnc -gui  #可以启动一个tk编写的图形界面前端
   x11vnc --loop  #这将在会话完成后重新启动服务器 
   ```
 
-## vncconfig
+## vnc配置文件
 
-控制vnc的工具，在服务端执行vncconfig可以打开一个图形窗口，可在其中勾选激活客户端和服务端之间剪切版同步等功能。
+**如果默认情况下连接vncserver后符合需求，无需更改相关配置文件。**
 
-## vncserver配置示例
+用户的vnc配置文件再`~/.vnc`目录下，主要是`config`和`xstarup`。
 
-vncserver命令中可以设置显示和操作相关参数，参数可以在vnc配置文件中配置，主要涉及`~/.vnc`下的`config`文件和`xstartup`文件（如果没有单独配置这两个文件，将使用默认的配置）。
+一般首次执行vncserver相关命令会创建`~/.vnc`目录并生成这两个文件。
 
 `config`文件中的配置可在`vncserver`命令参数中指定，`xstartup`中的配置只能写在一个文件中，可使用`vncserver`的`-xstartup`参数指定文件。
+
+### config文件
 
 `~/.vnc/config`文件配置根据名称即可获知其用途，示例如下：
 
@@ -167,6 +171,10 @@ geometry=1920x1080  #分辨率
 dpi=96
 ```
 
+
+
+### xstarup文件
+
 `~/.vnc/xstartup`文件供启动虚拟会话时使用，是一个shell文件，配置启动会话时的相关环境，最重要的是配置启动会话的桌面环境或窗口管理器，示例如下：
 
 ```shell
@@ -174,6 +182,12 @@ dpi=96
 unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
 export XKL_XMODMAP_DISABLE=1
+
+# [ -x /etc/vnc/xstartup ] && exec /etc/vnc/xstartup
+# [ -r $HOME/.Xresources ] && xrdb $HOME/.Xresources
+
+#vnc config tool show at the top-left in vnc window 开启后连上vnc会再左上角看到一个配置窗口
+# vncconfig -iconic &
 
 #指定要使用什么桌面环境或窗口管理器
 #session=startxfce4    #xfce
@@ -186,6 +200,14 @@ session=gnome-session  #GNOME
 
 # Copying clipboard content from the remote machine (need install autocutsel)
 #autocutsel -fork
+if [[ $session == 'gnome-session' ]]; then
+  if [[ -f /etc/sysconfig/desktop ]]; then
+    . /etc/sysconfig/desktop
+	else
+		session='gnome-session --session=gnome-classic'
+	fi
+fi
+    
 
 #exec $session
 exec dbus-launch $session
@@ -201,32 +223,34 @@ exec dbus-launch $session
 
 # 相关问题
 
-- 黑屏
-  - VNC协议基于X，不支持wayland。
-  - 没有在xstartup中执行
+## 黑屏
 
-- dbus冲突
+- VNC协议基于X，不支持wayland
 
-  > Could not make bus activated clients aware of XDG_CURRENT_DESKTOP=GNOME environment variable: Could not connect: Connection refused
-  
+- 缺少xorg相关包（xorg-server-* ，xorg-X11-xinit，xorg-x11-xauth等等）
+
+- 连接虚拟机中的vncserver黑屏（甚至执行vncserver无法开启服务），关闭该虚拟机设置中图形选项的显卡3D加速。
+
+- xstarup中没有定义要执行的应用（比如桌面）
+
+## dbus冲突
+
+> Could not make bus activated clients aware of XDG_CURRENT_DESKTOP=GNOME environment variable: Could not connect: Connection refused
 
 例如安装了anaconda，它的bin目录中的dbus-daemon会与系统自带的dbus-daemon冲突。
 
 解决方法：
 
 - 不使用ananconda
-  
+
 - 不要自动激活ananconda或者将其加入登录后自动加载的环境变量，使用时手动加载。
-  
-- 提升系统原有dbus-daemon优先级
-  
-  复制`/usr/bin/dbus-daemon`到其他目录，在ananconda的export后面添加这个目录的PATH。例如：
-  
+
+- 提升系统的dbus-daemon优先级，示例：
+
   ```shell
-    cp $(which dbus-daemon) /usr/local/bin
-    #anaconda.sh是写有ananconda环境变量配置的文件
-    echo "export PATH=/usr/local/bin:$PATH" >> /path/to/anaconda.sh
+  cp $(which dbus-daemon) /usr/local/bin/
+  export PATH=/usr/local/bin:$PATH
   ```
-  
-  
+
+
 
