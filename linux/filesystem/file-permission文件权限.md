@@ -1,6 +1,8 @@
-# 权限说明
+# 基本权限
 
-## 权限范围
+## 基本权限的说明
+
+**权限所有者**，即哪些用户对文件具有权限：
 
 | 权限范围 | 符号表示 | 说明                  |
 | -------- | -------- | --------------------- |
@@ -11,9 +13,9 @@
 
 *Linux系统中，预设的情況下，系统中所有的帐号信息记录在`/etc/passwd`文件中，每个用户的密码（经过加密）则记录在`/etc/shadow`文件中，所有的组群信息记录在`/etc/group`文件中。*
 
-## 基本权限rwx
 
-rwx是最基本的权限。
+
+**基本权限类型**，即对文件所具有的基本权限：
 
 | 权限类型 | 字母表示 | 数字表示 | 说明                             |
 | :------- | -------- | -------- | -------------------------------- |
@@ -24,15 +26,16 @@ rwx是最基本的权限。
 
 *此处数字是八进制*
 
-使用`ls -l name`示例，`ls -l /etc/hosts`列出信息如下：
+**基本权限信息**，使用`ls -l name`示例，`ls -l /etc/hosts`列出信息如下：
 
-```shell
--rw-r--r--. 1 root root 65 Mar 12 03:24 /etc/hosts
-```
+> -rw-r--r--. 1 root root 65 Mar 12 03:24 /etc/hosts
+
+
 
 提示：使用`stat -c %a 文件名`可以获取以数字表示的权限信息，例如`stat -c %a /etc/hosts `返回的信息是`644`。
 
-``-rw-r--r--`即为权限信息，按顺序解释各个符号意义如下：
+
+`-rw-r--r--`即为权限信息，按顺序解释各个符号意义如下：
 
 - 第1位：文件类型（查看[linux文件类型](#linux文件类型)）
 - 第2-10位：不同用户对该文件的权限
@@ -49,82 +52,139 @@ rwx是最基本的权限。
 
     提示：以`ls -l`看到的权限信息中有`+`号时，应当用`getfacl`查看权限信息，因为该种情况下`ls -l`展示的权限信息可能是ACL MASK有效权限，参看下文[ACL权限管理](#ACL权限管理)中关于MASK有效权限的描述。
 
-## 特殊权限SUID SGID Sticky
-
-- SUID
-
-  具有SUID权限的**二进制可执行文件**在**执行中，执行者拥有与该文件所有者相同的权限**。
-
-  - 仅对二进制可执行文件有效
-  - 执行者对于该程序需要有可执行权限
-  - 该权限仅在程序执行过程中有效
-  - 执行过程中，执行者将具有该程序拥有者(owner)的权限。
-
-  注意：如果所有者是 root 的话，那么该文件的执行者就有超级用户的特权。
-  
-  查看具有SUID的文件权限信息，可看到**`s` 标志替换原所有者的`x`标志**：
-  
-  > [root@cent7 ~]# ls -l /usr/bin/passwd                                                                                   -rwsr-xr-x. 1 root root 27832 Jun 10  2014 /usr/bin/passwd
-
-- SGID
-
-  特点同SUID，只是**`s`替换文件权限信息中所属群组的`x`标志**，SGID权限对该群组（group）用户有效。
-
-  > [root@cent7 ~]# ls -l /usr/bin/wall -a
-  > -r-xr-sr-x. 1 root tty 15344 Jun 10  2014 /usr/bin/wall
-
-- Sticky
-
-  特点类似SUID，`s`出现在文件权限信息中其他用户的x位置，Sticky权限对其他用户有效。
-
-  特别的：**Sticky只针对目录有效**，在目录设置Sticky位后，任何用户都能在该目录下创建文件，但是只有文件的所有者或root可以删除自己的目录或文件。
-
-  例如`/tmp`目录
-
-  > [root@cent7 ~]# ls -l / |grep tmp                                                                                       drwxrwxrwt.   7 root root  132 Sep  9 03:28 tmp  
 
 
-注意：**如果s或t以大写的S或T出现，说明文件权限信息中原本没有x权限，此时该特殊权限不生效。**
+## 基本权限的修改
 
-# 权限更改
+`chown`修改文件的所有者（用户和组），`chgrp`修改文件所属组，`chmod`修改文件权限模式。
 
-## chmod/chown/chgrp
-
-- 常用参数：
+- 以上三个命令都能用到的常用参数：
   - `-c`或`--changes`  显示更改部分信息
   - `-R`或`--recursive`  作用于该目录下所有的文件和子目录
   - `-h`  修复符号链接
   - `--reference`  以指定的目录或文件的权限作为参照进行权限设置
 
-- chmod修改权限
-
-  ```shell
-  chmod [参数] <权限范围>[+-=]<权限> <文件/目录>
-  chmod -cR g+r /srv
-  chmod -cR u+w,g+r /srv  #多条权限规则使用逗号分隔
-  ```
+- chmod
 
   [权限范围](#权限范围)：u g o a
 
-  `+`表示加权限，`-`表示减权限，`=`表示重设权限
-
-  权限：r w x - s
-
-- chown修改所有者和所属组
+  `+`表示加权限，`-`表示减权限，`=`表示重设权限；也可直接使用数字模式设置权限。
 
   ```shell
-  chown [参数] <用户名>:<组名> <文件/目录>  #冒号:也可以使用点号.
+  #chmod [参数] <权限范围>[+-=]<权限> <文件/目录>
+  chmod -cR g+r /srv
+  chmod -cR u+w,g+r /srv  #多条权限规则使用逗号分隔
+  chmod g=rwx /srv
+  chmod 775 /srv
+  ```
+
+- chown
+
+  ```shell
+  ##冒号:也可以使用点号. 组名可省略
+  #chown [参数] <用户名>[:组名] <文件/目录>
   chown -R nginx.nginx /srv/
   ```
 
 - chgrp修改所属组
 
   ```shell
-  chown [参数] <组名> <文件/目录>  #冒号:也可以使用点号.
-  chown -cR nginx /srv/
+  #chgrp [参数] <组名> <文件/目录>  #冒号:也可以使用点号.
+  chgrp -cR nginx /srv/
   ```
 
-## ACL权限管理
+# 特殊权限
+
+## SUID 设置用户ID
+
+具有SUID权限的**二进制可执行文件**在**执行中，执行者拥有与该文件所有者相同的权限**。
+
+- 仅对二进制可执行文件有效
+- 执行者对于该程序需要有可执行权限
+- 该权限仅在程序执行过程中有效
+- 执行过程中，执行者将具有该程序拥有者(owner)的权限。
+
+注意：如果所有者是 root 的话，那么该文件的执行者就有超级用户的特权。
+
+使用`ls -l`输出的10或11位信息中，如果原本第4位`x`应该出现的位置显示为`s` ，表示该文件具有SUID权限：
+
+> [root@cent7 ~]# ls -l /usr/bin/passwd                                                                                   -rwsr-xr-x. 1 root root 27832 Jun 10  2014 /usr/bin/passwd
+
+设置SUID示例：
+
+```shell
+chmod u+s /tmp/test.sh
+```
+
+
+
+## SGID 设置组ID
+
+特点同SUID，SGID权限仅对该群组（group）用户有效。
+
+使用`ls -l`输出的10或11位信息中，如果原本第7位`x`应该出现的位置显示为`s` ，表示该文件具有SGID权限：
+
+> [root@cent7 ~]# ls -l /usr/bin/wall -a
+> -r-xr-sr-x. 1 root tty 15344 Jun 10  2014 /usr/bin/wall
+
+
+
+设置SGID示例：
+
+```shell
+chmod g+s /tmp/test.sh
+```
+
+
+
+## Sticky 设置粘滞位
+
+Sticky权限仅对其他用户（other）有效，只用于目录。
+
+> 只有目录内文件的所有者或者[root](https://zh.wikipedia.org/wiki/超级用户)才可以删除或移动该文件。如果不为目录设置粘滞位，任何具有该目录写和执行权限的用户都可以删除和移动其中的文件。实际应用中，粘滞位一般用于/tmp目录，以防止普通用户删除或移动其他用户的文件。
+
+注意：设置了sticky权限后的目录，其下面的文件只是不可被其他用户移动或删除（即是其他用户对其拥有w权限），只要其他用户拥有w权限，还是可以修改文件内容的。
+
+使用`ls -l`输出的10或11位信息中，如果原本第10位`x`应该出现的位置显示为`t` ，表示该文件具有Sticky权限：
+
+例如`/tmp`目录
+
+> [root@cent7 ~]# ls -l / |grep tmp                                                                                       drwxrwxrwt.   7 root root  132 Sep  9 03:28 tmp  
+
+注意：**如果s或t以大写的S或T出现，说明原本其他用户对该目录就没有x权限，此时设置Sticky并不生效。**
+
+
+
+设置Sticky示例：
+
+```shell
+chmod o+t /share
+```
+
+
+
+# 权限掩码 umask
+
+**umask命令**用来设置新建文件的[基本权限](#基本权限)的掩码，一共4位。
+
+以数字形式为例，`0755`表示新建文件
+
+使用`777`减去umask的值，即得到新建文件的默认权限，一般。例如`umask`执行后得到`022`，则新建文件权限为`777-022=755`，即`rxwr-xr-x`。
+
+```shell
+umask #以数字形式当前的掩码 如022
+umask -S #以符号方式输出掩码 如u=rwx,g=rx,o=rx 即是022
+
+#设置掩码
+umask u=,g=2,o=rwx  #umask 0750 即rwxr-x---
+umask 022
+```
+
+
+
+# ACL权限管理
+
+## ACL介绍
 
 ACL（Access Control Lists，访问控制列表）为文件系统提供更为灵活的附加权限机制。弥补chmod/chown/chgrp的不足。
 
@@ -146,18 +206,21 @@ ACL 通过以下对象来控制权限：
 
 - other  其他用户  对应ACL_OTHER
 
+  > ACL_USER_OBJ：相当于Linux里file_owner的permission
+  > ACL_USER：定义了额外的用户可以对此文件拥有的permission
+  >
+  > ACL_GROUP_OBJ：相当于Linux里group的permission
+  > ACL_GROUP：定义了额外的组可以对此文件拥有的permission
+  >
+  > ACL_MASK：定义了ACL_USER, ACL_GROUP_OBJ和ACL_GROUP的最大权限
+  >
+  > ACL_OTHER：相当于Linux里other的permission
 
-> ACL_USER_OBJ：相当于Linux里file_owner的permission
-> ACL_USER：定义了额外的用户可以对此文件拥有的permission
->
-> ACL_GROUP_OBJ：相当于Linux里group的permission
-> ACL_GROUP：定义了额外的组可以对此文件拥有的permission
->
-> ACL_MASK：定义了ACL_USER, ACL_GROUP_OBJ和ACL_GROUP的最大权限
->
-> ACL_OTHER：相当于Linux里other的permission
 
 
+## getfacl和setfacl
+
+getfacl获取当前权限信息
 
 ```shell
 getfacl <file>  #获取文件的权限信息
@@ -166,7 +229,7 @@ setfacl [-bkndRLP] { -m|-M|-x|-X ... } <acl规则>
 #设置文件权限示例： set -m <u|g|o|m]:[name]:[rwx-] <file>
 ```
 
-setfacl使用：
+setfacl设置权限
 
 - 参数
 
@@ -206,18 +269,18 @@ setfacl使用：
   setfacl -m m::r-x /home
   ```
 
-# 附
+# 扩展属性 extended attr
 
-## 修改文件属性chattr
+Extended Attributes，以下简称EA，是区分于文件属性、文件的扩展出来的属性。
 
-遇到对不能对某个文件/目录进行某种操作（如删除），但却是对该文件有权限时，应该查看该文件/目录是否设置了某种属性。
+EA可以给文件、文件夹添加额外键值对，以键值对地形式将任意元数据与文件i节点关联起来。键和值都是字符串并且有一定长度地限制，是完全自定义的属性。
 
-- 属性模式：
+- 扩展属性模式：
   - a：让文件或目录仅供附加用途。
   - b：不更新文件或目录的最后存取时间。
   - c：将文件或目录压缩后存放。
   - d：将文件或目录排除在倾倒操作之外。
-  - i：不得任意更动文件或目录。
+  - i：不得任意更动文件或目录（不能被删除、改名、设定链接关系，不能写入或新增内容）。
   - s：保密性删除文件或目录。
   - S：即时更新文件或目录。
   - u：预防意外删除。
@@ -230,4 +293,9 @@ setfacl使用：
   - `+<属性>`：开启文件或目录的该项属性；
   - `-<属性>`：关闭文件或目录的该项属性；
   - `=<属性>`：指定文件或目录的该项属性。
-
+  
+  ```shell
+  chattr +i /etc/hosts
+  ```
+  
+  
