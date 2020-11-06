@@ -28,10 +28,12 @@
 
 - 使用工具制作启动盘
 
+  - ventory
+
   - windows下可使用[usbwriter](https://sourceforge.net/projects/usbwriter/)、[poweriso](http://www.poweriso.com)、[winsetupfromusb](http://www.winsetupfromusb.com/)等工具。
 
   - Linux/OSX下可使用dd命令。示例：
-
+  
     ```shell
     #/path/arch.iso是下载的Arch Linux镜像文件路径  /dev/sdx U盘的设备编号（根据情况修改如sdb sdc）
     dd if=/path/arch.iso of=/dev/sdx bs=1024
@@ -441,6 +443,9 @@ linux自带的`linux-frimware`已经支持大多数驱动，如果某些设置�
     pacman -S efibootmgr  #使用esp还需安装
     ##如果单独划分了esp，将其挂载到/boot/efi，则--efi-directory=/boot/efi
     grub-install --efi-directory=/boot --bootloader-id=grub
+    ```
+  ```
+  
   ```
 
  - 使用Legacy

@@ -31,6 +31,19 @@ logoff #登出（注销）
 
 
 
+# 防火墙
+
+Firewall.cpl
+
+```powershell
+#查看防火墙状态
+netsh advfirewall show allprofiles
+#关闭防火墙
+netsh advfirewall set allprofiles state off #开启on
+```
+
+
+
 # 账户管理
 
 - `netplwiz`  用户账户管理程序
@@ -39,6 +52,16 @@ logoff #登出（注销）
 ## 用户管理
 
 ```powershell
+#账户策略
+#密码长度最小值 0
+net accounts /minpwlen:0
+
+#密码最短使用时间 0（默认0 表示可以立即修改密码）
+net accounts /minpwage:0
+
+#密码最长使用时间 （unlimited表示密码永不过期）
+net accounts /maxpwage:unlimited
+
 #列出用户信息
 net user  #所有用户
 net user /domain  #当前域的用户
@@ -49,9 +72,9 @@ net user $username  #具体某个用户
 net user $username $password /add [/domain]
 #不能直接修改用户名（可以在组策略gpedit.msc中修改）
 #修改用户密码
-net user $username $new_pwd
+net user $username $new_pwd /active
 #删除用户
-net user $username /del
+net user $username /del  #delete
 
 #当然 以下的操作可以合并到用户创建的命令中
 #禁用和启用账户
@@ -165,5 +188,3 @@ net use \\ip\ipc$ /del  #删除IPC链接
 - sfc.exe------系统文件检查器
 - sfc /scannow------Windows文件保护
 - eventvwr------事件查看器
-
-#

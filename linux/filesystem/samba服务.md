@@ -29,19 +29,22 @@ net share  #查看已经共享列表
 
 ## Linux
 
-安装`samba`，启用`smb`和`nmb`服务（或名`smbd`或`nmbd`）。
+安装`samba`，不同发行版可能包名不同，有的发行版将winbind模块拆分单独打包。
+
+启用`smb`和`nmb`服务（或名`smbd`或`nmbd`）。
 
 - selinux: off
 
 
 - firewall: samba使用445 TCP/UDP端口：
 
-  - nmb
+  - nmb   NetBIOS名称服务器
     - TCP 445 ：Microsoft-DS Active Directory、Windows 共享资源（TCP）
     - UDP 445 ：Microsoft-DS SMB 文件共享（UDP）
-  - smb
+  - smb   AD和SMB / CIFS文件服务器
     - UDP 137： NetBIOS 命名服务（WINS）
     - UDP 138 ：NetBIOS 数据包
+  - winbind   加AD域后提供名称解析服务(用于从NT服务器解析名称)
 
 ### 配置
 

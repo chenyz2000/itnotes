@@ -421,31 +421,34 @@ windows 下：在资源管理器里新建一个 .gitignore 文件，系统会提
 在文本编辑器里 “ 保存 ” 或者 “ 另存为 ” 就可以把文件保存为 .gitignore 了。
 
 * 校验 .gitingore 文件：`git check-ignore`
+
 * 校验指定规则：`git check-ignore -v <rule>`
+
 * 强制添加被忽略的文件：`git add -f <file-name>`
+
 * .gitingore 编写规则：
   * `#`注释
   * 一行一条
   * 同名匹配
   * 可使用通配符
-
-```gitignore
-*.a       # 忽略所有 .a 结尾的文件
-!lib.a    # 但 lib.a 除外
-/TODO     # 仅忽略项目根目录下的 TODO 文件，不包括非根目录下的TODO，例如 subdir/TODO
-build/    # 忽略 build/ 目录下的所有文件
-doc/*.txt # 忽略 doc/notes.txt 但不包括 doc/server/arch.txt
-```
-
-如果一个项目中仅有很少部分不被忽略，可以先使用`*`忽略所有，再使用`!`取反添加不被忽略的匹配模式：
-
-```gitignore
-#先忽略所有
-*
-#添加白名单
-!config
-!install.sh
-```
+  
+  ```shell
+  *.a       # 忽略所有 .a 结尾的文件
+  !lib.a    # 但 lib.a 除外
+  /TODO     # 仅忽略项目根目录下的 TODO 文件，不包括非根目录下的TODO，例如 subdir/TODO
+  build/    # 忽略 build/ 目录下的所有文件
+  doc/*.txt # 忽略 doc/notes.txt 但不包括 doc/server/arch.txt
+  ```
+  
+  如果一个项目中仅有很少部分不被忽略，可以先使用`*`忽略所有，再使用`!`取反添加不被忽略的匹配模式：
+  
+  ```shell
+  #先忽略所有
+  *
+  #添加白名单
+  !config
+  !install.sh
+  ```
 
 ## 配置
 
@@ -460,18 +463,43 @@ git 的配置文件在`~/.gitconfig`，仓库的配置文件是仓库内的`.git
 
 加上`--global`参数，则设置内容对当前用户生效，不加`--global`则对当前仓库生效。
 
-* 检查配置情况：`git config --list`
+* 检查配置情况
 
-* 设置默认编辑器，如 nano： `git config --global core.editor nano`
+  ```shell
+  git config --list
+  ```
 
-* 设置默认对比工具，如 meld：`git config --global merge.tool meld`
+* 设置编辑器
 
-* 彩色输出：`git config --global color.ui true`
+  ```shell
+  git config --global nano  #使用nano
+  git config --global core.editor vim  #linux下使用vim
+  git config --global core.editor "vim -u NONE"  #macos下使用vim
+  ```
 
-* 中文文件名显示：`git config --global core.quotepath false`（避免中文显示成数字
-  ）
+- 设置差异对比工具
 
-* 显示历史记录时每个提交的信息显示一行： `git --global config format.pretty oneline`
+  ```shell
+  git config --global merge.tool meld  #使用meld
+  ```
+
+* 彩色输出
+
+  ```shell
+  git config --global color.ui true
+  ```
+
+* 中文文件名显示（避免中文显示成八进制数字）
+  
+```shell
+  git config --global core.quotepath false
+  ```
+  
+* 显示历史记录时每个提交的信息显示一行
+
+  ```shell
+  git config --global format.pretty oneline
+  ```
 
 * 设置用户名和电子邮箱
 
@@ -503,47 +531,63 @@ git 的配置文件在`~/.gitconfig`，仓库的配置文件是仓库内的`.git
 
 * 设置命令别名：`git config --global alias.<another name> status`
 
-      git config --global alias.ci commit
-      git config --global alias.br branch
-      git config --global alias.unstage 'reset HEAD'
-      git config --global alias.graph 'log --graph --oneline --decorate'
-
+  ```shell
+  git config --global alias.ci commit
+  git config --global alias.br branch
+  git config --global alias.unstage 'reset HEAD'
+git config --global alias.graph 'log --graph --oneline --decorate'
+  ```
+  
   # git 服务简易搭建
 
-1. 安装 git、openssh ，开启 ssh 服务：`systemctl start sshd && systemctl enable sshd`
+1. 安装 git、openssh ，开启 ssh 服务
 
-2. 创建运行 git 服务的用户（可选）
+   ```shell
+   systemctl enable --now sshd
+   ```
 
-3. 初始化 Git 仓库：`git init --bare <name.git>`（服务器上的 Git 仓库通常都以
-   .git 结尾）
+2. 创建运行 git 服务的用户（或使用已有的用户）
 
-   如果要从已经存在的仓库克隆一份作为新的裸仓库：`git clone --bare <repo-name> <new-repo-name>.git` （注意：此命令会**只复制**出原仓库中的`.git`目录）
+   ```shell
+   useradd git
+   #设置密码等。。。
+   ```
 
-   也可以将原仓库的`.git`目录复制并改名成一个新仓库：`cp <repo-name>/.git <new-repo-name>.git`
+3. 初始化 Git 仓库
+
+   ```shell
+   #完全创建一个新的仓库
+   git init --bare <name.git>  #服务器上的 Git 仓库通常以.git结尾
+   
+   #如果要从已经存在的仓库克隆一份作为新的仓库
+   #使用gitclone
+   git clone --bare <repo-name> <new-repo-name>.git
+   #或者使用cp、rsync等直接复制
+   cp -av <repo-name>/.git <new-repo-name>.git
+   
+   #确保git用户对仓库有权限（至少700）
+   ```
 
    如果服务器的 ssh 服务更改了默认使用端口，参照前文 “ 远程关联 - 从远程仓库克隆
    ” 中的使用方法。
 
-4) 安全管理
+4. 上传用户公钥（可选）
 
-* 非对称加密
+   收集所有需要登录的用户的公钥（公钥一般位于`$HOME/.ssh/id_rsa.pub`），导入到git服务器上云运行git服务的用户的`~/.ssh/authorized_keys`文件中（一行一个）。
 
-  在客户机使用`ssh-keygen`生成非对称加密的公私钥，在服务器上运行 git 的用户
-  的`~/.ssh/authorized_kesys`文件中，添加有客户机公钥。（注意：保证`.ssh`文件夹
-  权限为 700 以及`authorized_kesys`文件权限为 600，公钥一行一个。）
+   注意：`.ssh`目录权限为`600`，`.ssh/authorized_keys`权限为`644`。
 
-* git 文件夹权限
+   客户端生成密钥的方法：`ssh-keygen`
 
-  git 仓库文件夹的权限设置为 755（即`rwxr-xr-x` ），不允许其他用户更改（仅通过添
-  加 SSH 公钥来添加允许更改的客户端，这些被允许的客户端是通过执行 git 服务的用户
-  来获取写入权限的）。
+   也可以使用`ssh-copy-id`上传公钥： `ssh-copy-id <git-user>@<git-host>`
 
-* ssh 权限
+5. 客户端使用仓库
 
-  ssh 配置文件位于`/etc/ssh/sshd_config` ，如更改默认端口，使用白名单策略等等。
+   ```shell
+    git clone <git-user>@<git-host>:<git-path>
+   ```
 
-* shell 权限
+   
 
-  假如 git 服务的执行用户名为`git`，编辑`/etc/passwd`文件，找到`git`所在行，将行
-  中`/bin/bash`字样（根据不同 shell，也可能是`bin/zsh`等等） 改为`bin/git-shell`
-  。
+
+

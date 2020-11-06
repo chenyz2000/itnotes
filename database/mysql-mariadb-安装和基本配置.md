@@ -12,11 +12,30 @@ mysql被收购后衍生的分支，由社区维护。
    ```
 
 3. 启动mariadb服务
+
+   ```shell
+   systemctl enable --now mariadb
+   ```
+
 4. 可选，执行安全配置助手`mysql_secure_installation`进行配置，以提升安全性。其会询问用户作出一些安全性相关的设置建议，主要包括：
    - 设置root密码
    - 远程登录开关
    - 删除匿名帐号
    - 是否删除测试数据库test
+
+   或者使用sql：
+
+   ```sql
+   use mysql;
+   delete from user where user='root' and host!='localhost';
+   --SET PASSWORD FOR 'root'@'localhost' = PASSWORD('$db_root_pwd');
+   --SET PASSWORD FOR 'root'@'%' = PASSWORD('$db_root_pwd');
+   --:del test db
+   drop database if exists test;
+   --:del anymous users
+   delete from mysql.user where user='';
+   FLUSH PRIVILEGES;
+   ```
 
 # Mysql
 
@@ -51,7 +70,7 @@ mysql community rpm bundles（5.7及以上版本）含有以下软件包：
 
    ```shell
    yum install mysql*{server,client,common,libs}*.rpm
-   systemctl start mysqld  #注意mysql5.6及以下的服务名为mysql而非mysqld
+   systemctl enable --now mysqld  #注意mysql5.6及以下的服务名为mysql而非mysqld
    ```
 
 2. root密码

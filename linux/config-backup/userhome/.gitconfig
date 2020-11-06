@@ -3,6 +3,8 @@
 	email = levinit@outlook.com
 [core]
 	excludesfile = /Users/levin/.gitignore_global
+	editor = vim -u NONE
+	quotepath = false
 [difftool "sourcetree"]
 	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
 	path = 

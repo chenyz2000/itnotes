@@ -148,6 +148,7 @@ dnsmasq包含dhcp、dns和tftp功能，无需单独安装配置这三种工具�
    
    ###启动文件
    pxe-prompt=pxe-server... #pxe的提示信息
+   pxe-service=X86-64,"Install OS from $server", EFI/BOOT/grubx64.ef,pxelinux
    
    ##legacy或uefi配置
    #legacy BIOS

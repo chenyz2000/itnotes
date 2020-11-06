@@ -4,8 +4,15 @@
    3. <kbd>ctrl</kbd> <kbd>x</kbd>完成修改，开始系统引导。
 2. 修改密码
    1. `mount -o remount,rw /sysroot` 重新挂载`/sysroot`；
+   
    2. `chroot /sysroot` 更改根目录；
-   3. `passwd root`修改密码；(或清空`/etc/shadow`文件中root用户第二字段——第一个冒号和第二个冒号之间的内容)
+   
+   3. `passwd root`或者其他修改命令修改密码；
+   
+      或清空`/etc/shadow`文件中root用户第二字段——第一个冒号和第二个冒号之间的内容。
+   
    4. `touch /.autorelabel`  开启了SELinux的情况下必须执行该步骤；
+   
    5. `exit`或<kbd>ctrl</kbd> <kbd>d</kbd>退出`chroot`；
+   
    6. `exit`或<kbd>ctrl</kbd> <kbd>d</kbd>或`reboot`重启系统。

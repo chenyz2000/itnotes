@@ -1,3 +1,30 @@
+# NetworkManager
+
+桌面中可使用GUI前端，终端中可使用nmtui。
+
+## nmcli
+
+```shell
+nmcli con show --active
+nmcli con mod <con-name> ipv.method manual ipv4.address <ip-addr> ipv4.getway <gateway-addr> ipv4.dns <dns-addr>
+
+nmcli con add type ethernet con-name <name> ifname <interface-name>
+
+#bridge
+nmcli con add type bridge con-name TowerBridge ifname TowerBridge
+nmcli con add type ethernet con-name br-slave-1 ifname ens3 master TowerBridge
+nmcli con modify TowerBridge bridge.stp no
+
+#wifi
+nmcli device wifi connect "$SSID" password "$PASSWORD"
+nmcli --ask device wifi connect "$SSID"
+
+```
+
+
+
+
+
 nethogs: 按进程查看流量占用iptraf: 按连接/端口查看流量ifstat: 按设备查看流量ethtool: 诊断工具tcpdump: 抓包工具ss: 连接查看工具其他: dstat, slurm, nload, bmon
 
 atop
@@ -17,7 +44,7 @@ iotop
 ping -c 4 -i 1 z.cn
 ```
 
-# ip
+# ip-router
 
 iproute（或iproute2）的相关命令替代net-tools的`ifconfig`、`arp`和`route`等命令。
 
