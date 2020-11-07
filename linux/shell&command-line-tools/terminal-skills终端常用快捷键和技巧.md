@@ -29,8 +29,8 @@
 
 
 
-- <kbd>Ctrl</kbd><kbd>⬅</kbd>  移动到当前单词结尾
-- <kbd>Ctrl</kbd><kbd>➡</kbd>  移动到当前单词开头
+- <kbd>Ctrl</kbd><kbd>&leftarrow;</kbd>  移动到当前单词结尾
+- <kbd>Ctrl</kbd><kbd>&rightarrow;</kbd>  移动到当前单词开头
 
 
 
