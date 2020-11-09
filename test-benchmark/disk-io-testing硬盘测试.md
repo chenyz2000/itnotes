@@ -30,10 +30,16 @@ of文件位于要测试的硬盘的挂载目录中。
 
 `/dev/urandom` 随机数生成设备，可用以测试随机读写。
 
+conv和oflag/iflag参数的选择可按实际应用场景需要选择。
+
 - `conv`
 
-  - `fdatasync` physically write output file data before finishing  dd完成前将文件写入硬盘 （读取所有数据到缓存后，最后将数据从缓存写入到硬盘 完全写到硬盘后返回完成）
+  - `fdatasync` physically write output file data before finishing 
+
+    dd完成前将文件写入硬盘，读取所有数据到缓存后，最后将数据从缓存写入到硬盘 完全写到硬盘后返回完成，和平常使用场景类似。
+
   - `fsync`   likewise (fdatasync), but also write metadata 同上，只是还要写入元数据
+
   - `sync`  在每个块左侧用NUL填充空值，遇到错误即使不是所有数据本身都可以包含在映像中，也会保留原始 数据（单纯dd测试用不上）
 
 - `iflag`/oflag
@@ -42,14 +48,16 @@ of文件位于要测试的硬盘的挂载目录中。
 
   - `sync`   likewise, but also for metadata 同上，只是还要写入元数据
 
-  - `direct`  direct I/O for data （direct I/O 避免内核中整个缓存层并将I/O直接发送到磁盘）
+  - `direct`  direct I/O for data 
+
+    direct I/O 避免内核中整个缓存层并将I/O直接发送到磁盘.每个数据块完全完成后，再进行下一次IO，绕过缓存，用来测试硬盘的实际性能。
 
   - `nonblock`  非阻塞IO
 
     direct I/O和sync I/O：
 
     direct I/O从用户态直接跨过“**stdio缓冲区的高速缓存**”和“**内核缓冲区的高速缓存**”，直接写到存储上。
-
+  
     sync I/O控制“**内核缓冲区的高速缓存**”直接写到存储上，即强制刷新内核缓冲区到输出文件的存储。
   
     IO流：用户数据 –> stdio缓冲区 –> 内核缓冲区高速缓存 –> 磁盘
