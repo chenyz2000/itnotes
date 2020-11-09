@@ -135,10 +135,11 @@ seq -w 99 101  #倒序生成数字
 
 # 文件相关
 
-- 获取当前软链接的路径
+- 获取文件的绝对路径/软链接的原始文件的路径
 
   ```shell
-  readlink -f `dirname $0`
+  readlink -f link-file-name   #软链接的原始文件的绝对路径
+  readlink -f `dirname $0`     #当前脚本文件的绝对路径
   ```
 
 - 当前执行文件所在的目录
@@ -159,6 +160,7 @@ seq -w 99 101  #倒序生成数字
 
   ```shell
   basename `/home/test1/testfile`
+  basename `$0`  #获取当前脚本的文件名
   ```
 
 - 文件大小

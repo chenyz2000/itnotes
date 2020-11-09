@@ -13,3 +13,7 @@
 	trustExitCode = true
 [commit]
 	template = /Users/levin/.stCommitMsg
+[color]
+	ui = true
+[format]
+	pretty = oneline

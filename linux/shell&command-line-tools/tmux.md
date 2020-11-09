@@ -11,6 +11,18 @@
 
 - 将当前会话放入后台 <kbd>Ctrl</kbd><kbd>b</kbd>  <kbd>d</kbd> 
 
+- 关闭会话
+
+  从会话中退出即会关闭会话。
+
+  使用命令关闭：
+
+  ```shell
+  tmux kill-session  #关闭最近的一个会话
+  tmux kill-session -t <session-name>  #关闭指定会话
+  tmux kill-server  #关闭所有会话
+  ```
+
 - 创建会话 放入后台 并向其发送要执行的指令
 
   ```shell
@@ -18,14 +30,25 @@
   window=main
   command='whoami'
   
-  tmux new -s $session -n $window -d #创建会话test 窗口名为main 后台运行
-  tmux send-keys -t $session:$window "$command" C-m
+  #创建会话test后台运行
+  tmux new -s $session -d
+  #可以在会话中创建窗口 例如窗口名为main
+  #tmux new -s $session -n $window -d
   
-  #其他相关命令
-  #tmux split-window -v -t $session  #水平分割 -h 垂直分割
-  #tmux select-layout -t $session main-horizontal  #分割模式
-  #tmux attach -t $session  #连接到会话查看
+  #向回话发送指令
+  tmux send-keys -t $session "$command" C-m
+  #可以指定发送某个窗口
+#tmux send-keys -t $session:$window "$command" C-m
   ```
-
+  
+  其他：
+  
+  ```shell
+  #分割指定会话的窗口（不指定窗口时使用每个会话默认的窗口）
+  tmux split-window -v -t $session  #-v水平分割 -h 垂直分割
+  
+  tmux select-layout -t $session main-horizontal  #分割模式
+  ```
+  
   
 

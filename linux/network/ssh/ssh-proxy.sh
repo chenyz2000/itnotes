@@ -1,11 +1,13 @@
 #!/bin/bash
+set -e #u
+unalias -a
 #ssh proxy ， remote port forwarding
 #Author: copyright @ Levinit
 
 #only for linux below 3 lines
-script_dir_path=$(dirname $(readlink -f "$0"))
-scirpt_name=$(echo $0 | awk -F '/' '{print $NF}')
-script_path=$script_dir_path/$scirpt_name
+# script_dir_path=$(dirname $(readlink -f "$0"))
+# scirpt_name=$(echo $0 | awk -F '/' '{print $NF}')
+script_path=$(readlink -f "$0")
 
 #--log file
 log=./proxy.log   #proxy log
@@ -37,14 +39,14 @@ ssh_proxy_info_file='' #eg. home-nas
 #ssh proxy info file path on the remote host, default is ~/proxy-hosts 远程主机上存放ssh转发信息文件的目录路径，默认是~/proxy-hosts
 info_file_dir_on_remoteHost=proxy-hosts
 
-#comments text will add to $ssh_proxy_info_file, allow empty, default is $(uname -a) 本机注释信息将添加到$ssh_proxy_info_file中，可以为空，默认为$(uname -a)
-localhost_comment="" #eg. this is a nas server at home  例如: 家里的NAS
+#comments text will add to $ssh_proxy_info_file, allow empty, default is $(uname -a) 本机注释信息将添加到$ssh_proxy_info_file中，可以为空，默认为$HOSTNAME: $(uname -a)
+localhost_comment="$HOSTNAME: $(uname -a)" #eg. this is a nas server at home  例如: 家里的NAS
 
 #ssh key auth
 action=$1 #
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~
-#===action
+#===action ｜ install
 function exec_action() {
     #action--install ,first time 安装操作，第一次运行
     if [[ $action == 'install' ]]; then
@@ -53,6 +55,7 @@ function exec_action() {
         echo "input remote host password for $remoteUser 输入远程主机上$remoteUser的密码："
         ssh-copy-id -p $remotePort $remoteUser@$remoteHost
 
+        #add a cron task 添加一个cron任务
         echo "Add sshproxy as a crond task? 添加sshproxy为crond任务？[y/n]"
         echo "[y]:"
         read as_a_cron_task
@@ -99,34 +102,22 @@ function check_ssh_params() {
         echo "[WARN]: param ssh_proxy_info_file is empty! Fallback: ==> $ssh_proxy_info_file " >>$log
     fi
 
-    [[ -z $localhost_comment ]] && localhost_comment=$(uname -a)
+    [[ -z $localhost_comment ]] && localhost_comment="$HOSTNAME-$(uname -a)"
 }
 
 #===proxy log 日志
-function check_log_size() {
+function check_log_file() {
+    local log_file_parent_dir=$(dirname $log)
+    [[ -d $log_file_parent_dir ]] || mkdir -p $log_file_parent_dir
     [[ -f $log ]] || touch $log
+
     #log file size control 日志文件大小控制 10000Bytes
     if [[ $(stat -c %s $log) -gt $log_maxsize ]]; then
         local tmp_log=$(mktemp)
-        tail -n 20 $log >$tmp_log
+        tail -n 100 $log >$tmp_log #keep 100 lines log
         cat $tmp_log >$log
     fi
-    echo "======start @ $(date)======" >>$log
-}
-
-#===cron task 周期任务
-function check_cron_task() {
-    #script is this script file path
-    local script=$0
-    [[ $(echo $script | grep $PWD) ]] || script=$PWD/$0
-    chmod +x $script
-
-    # add a cron task if it does not exist
-    if [[ ! $(crontab -l | grep $script) ]]; then
-        cronlist=$(mktemp)
-        echo -e "1 * * * * $script\n@reboot $script" >>$cronlist
-        crontab $cronlist
-    fi
+    echo "======LOG @ $(date)======" >>$log
 }
 
 #======checking 转发前检查
@@ -134,15 +125,18 @@ function check_ssh_forwarding() {
     #check ssh process 查找进程中是否已经存在指定的ssh转发进程
     forwarding_process_info=$(ps -aux | grep $proxyPort:$localHost:$localPort | grep -v grep)
 
+    #get ssh forwarding process PID 获取转发进程到PID
     [[ -n $forwarding_process_info ]] && forwarding_pid=$(echo $forwarding_process_info | awk '{print $2}')
 
     #If the process already exists 如果转发进程已经存在
     if [[ -n $forwarding_process_info ]]; then
         #check state of remote host forwarding port 检查远程主机上转发端口状态
         if [[ $(timeout 5 ssh -p $remotePort $remoteUser@$remoteHost "ss -tlpn |grep :$proxyPort") ]]; then
+            #proxy服务器上ssh进程状态正常 退出
             echo "Good! sshproxy is running." >>$log
             exit 1
         else
+            #proxy服务器上ssh进程未检查到 或者链接到proxy服务器超时 终止本地到转发进程
             kill -9 $forwarding_pid
         fi
     fi
@@ -157,9 +151,9 @@ function ssh_remote_forwarding() {
     #     exit 1
     # fi
 
-    echo "---start ssh proxy" >>$log
+    echo "---start ssh proxy---" >>$log
     local errlog=$(mktemp)
-    ssh -gfCNTR $proxyPort:$localHost:$localPort $remoteUser@$remoteHost -i $private_key -p $remotePort $options 1>>$log 2>$errlog
+    ssh -gfCNTR $proxyPort:$localHost:$localPort $remoteUser@$remoteHost -i $private_key -p $remotePort $options 1>>$log 2>errlog
 
     ##ssh参数说明
     #-g 允许远程主机连接转发端口
@@ -169,22 +163,25 @@ function ssh_remote_forwarding() {
     #-R 远程转发
     local proxyPID=$(ps -ef | grep $proxyPort:$localHost:$localPort | grep -v grep | awk '{print $2}')
 
-    #if there is some err info in the errlog file ,save the err， kill the process and exit
+    #if there are some ERR infos in the errlog file ,save the err， kill the process and exit
     #如果错误日志中有内容（转发出错） 记录错误信息，杀死该进程并退出
     [[ -s $errlog ]] && cat $errlog >>$log && pkill -9 $proxyPID && exit 1
 
     #saved proxy info and copy to the remote host
     ssh -p $remotePort $remoteUser@$remoteHost "mkdir -p $info_file_dir_on_remoteHost"
-    echo "++++++++
-$localhost_comment
-++++++++
-update-time:$(date)
-ssh-port:$localPort
-ssh-user:$localUser
-proxy-port:$proxyPort
-remote-port:$remotePort
-target-host <-- remote forwarding --> $remoteHost
-" >$ssh_proxy_info_file
+
+    echo "=== generate at $(date) ===
+        +++++ target server info +++++
+          About:$localhost_comment
+        ---------------------
+          os-info:$(uname -a)
+          ssh-port:$localPort
+          ssh-user:$localUser
+          proxy-port:$proxyPort
+        ++++++info end+++
+        SSH Remote Forwarding:
+          target-host <-- remote forwarding --> $remoteHost
+          " >$ssh_proxy_info_file
 
     scp -P $remotePort $ssh_proxy_info_file $remoteUser@$remoteHost:~/$info_file_dir_on_remoteHost/ >/dev/null
 }
@@ -192,13 +189,15 @@ target-host <-- remote forwarding --> $remoteHost
 #+++++++++
 #1.
 exec_action $action
+
 #2.
-check_ssh_params
+check_log_file
+
 #3.
-check_log_size
+check_ssh_params
+
 #4.
-check_cron_task
-#5.
 check_ssh_forwarding
-#6.
+
+#5.
 ssh_remote_forwarding
