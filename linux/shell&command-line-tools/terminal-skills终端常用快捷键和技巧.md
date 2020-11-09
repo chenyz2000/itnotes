@@ -1,16 +1,26 @@
 [toc]
 
-- 使用通配符**
+# 基本
+
+- 使用通配符`*`
 
 - 使用<kbd>Tab</kbd>补全
 
 - 命令前加上`\`将使用该命令原始行为，令同名alias失效。
 
   例如设置了`alias rm=rm -i`，使用`\rm`则该alias无效。
+  
+  `unalias -a`可使该shell进程中所有alias失效。
+
+
 
 # 光标相关操作
 
-以下快捷键多数在vim中依然适用。（编辑或普通模式）*
+*以下快捷键多数在vim中依然适用。（编辑或普通模式）*
+
+*某些终端应用中，可能不全部适用*。
+
+Mac键盘中，将<kbd>Ctrl</kbd>替换成<kbd>control</kbd>，<kbd>Alt</kbd>替换成<kbd>⌥</kbd>(option)。
 
 ## 移动光标
 
@@ -36,10 +46,19 @@
 
 - <kbd>Ctrl</kbd><kbd>xx</kbd>  在最后两次光标出现的位置间切换
 
+
+
 ## 复制和粘贴
 
 - <kbd>Shift</kbd><kbd>Ctrl</kbd><kbd>c</kbd>  复制
+
+  Mac：<kbd>⌘</kbd><kbd>c</kbd>
+
 - <kbd>Shift</kbd><kbd>Ctrl</kbd><kbd>v</kbd>  粘贴
+
+  Mac：<kbd>⌘</kbd><kbd>v</kbd>
+
+
 
 ## 删除内容
 
@@ -62,11 +81,13 @@
 
 - <kbd>Ctrl</kbd><kbd>l</kbd> 或`clear`  清除屏幕内容
 
+  Mac：<kbd>⌘</kbd><kbd>k</kbd>
+
 ## 替换和对调内容
 
 ### 大小写转换
 
-*该单词即是光标坐在的单词*
+*该单词即是光标坐在的单词*；Mac不适用。
 
 - <kbd>Alt</kbd><kbd>u</kbd>  将**该单词中**光标所在位置及其后的字母变为大写(upper case)
 - <kbd>Alt</kbd><kbd>l</kbd>  将**该单词中**光标所在位置及其后的字母变为小写(lower case)
@@ -135,9 +156,19 @@
 
 
 
-- <kbd>Alt</kbd><kbd>.</kbd>  粘贴上一条命令中的最后一个参数
+- <kbd>Alt</kbd><kbd>.</kbd>  或 <kbd>esc</kbd><kbd>.</kbd>  粘贴上一条命令中的最后一部分参数
 
-### 特殊符号和特殊参数
+  一条命令以IFS（空白分隔符，一个或多个空格/tab）分割成若干部分。
+
+  Mac使用后者
+
+- <kbd>Alt</kbd>n<kbd>.</kbd>  粘贴上一条命令中第n（一个数字）部分参数
+
+  Mac不适用
+
+  
+
+### 历史命令调用
 
 - `!!`  执行上一次命令
 
@@ -161,18 +192,25 @@
   !ss  #相当于执行第511条ssh root@localhost命令
   ```
 
-
+### 复用前一条命令中的参数
 
 上一条命令中的参数（以空格隔开的字段）
+
+- `!*`  前一条命令中的所有参数
+
+  ```shell
+  echo a b
+  touch !*  #等同于touch a b
+  ```
 
 - `!:<n>`  前一条命令中第n个参数（从1开始）
 
   ```shell
-  ls -lh .bashrc .vimrc
-  stat !:2  #等于执行stat .bashrc（上一条命令中的第2个参数）
+  ls /etc/hosts /etc/passwd 
+  stat !:2  #等于执行stat /etc/passwd（上一条命令中的第2个参数）
   ```
 
-- `^`  前一条命令的第一个参数
+- `!^`  前一条命令的第一个参数
 
   ```shell
   ls .bashrc .vimrc
@@ -186,31 +224,40 @@
   stat !$  #等于执行 stat .vimrc
   ```
 
----
+### 替换上一条命令中的字符
 
-设置magic-space 让历史记录表达式和参数符号立即“显出原形”，在bash配置文件中（如~/.bashrc）添加：
+- `^old^new`  将上一条命令中**第一个**的old字符串替换为新的new字符串
+
+  ```shell
+  systemclt status NetworkManager
+  ^lt^tl  #将上一条命令中的tl改成ctl再执行一次 等同systemctl status NetworkManager
+  systemctl start sshd
+  ^start^status sshd  #等于执行systemctl status sshd
+  ```
+
+- `!!:gs/old/new`  将上一条命令中**所有**的old字符串替换为新的new字符串
+
+  ```shell
+  echo aaa aaa
+  !!:gs/aaa/bbb   #将上一条命令替换成echo bbb bbb
+  ```
+
+# 魔法空格magic-space
+
+magic-space 让和历史记录相关的特殊参数表达式（参看前文命令历史中特殊参数一节）立即“显出原形”，zsh默认启用该功能。
+
+对于bash，在其配置文件中（如~/.bashrc）添加：
 
 ```shell
 bind Space:magic-space
 ```
 
-在键入下文的特殊符号或特殊参数后按下空格<kbd>Space</kbd>，即可显示该符号或参数所代表的实际内容。例如
+在键入下文的特殊符号或特殊参数后按下空格或回车，即可显示该符号或参数所代表的实际内容。例如
 
 ```shell
-ls .bashrc
-stat !:^  #在^后按下空格 该行就变成了 stat .bashrc
+ls /etc/hosts
+stat !:^  #在^后按下空格 该行就变成了 stat /etc/hostss
 ```
 
 在第二条命令输入完特殊参数`!:^`后按下空格，该特殊参数就被替换显示成了实际对应的内容——`.bashrc`。
-
----
-
-`^`修改上一条命令中的字符串为新的字符串，并执行修改后的命令：
-
-```shell
-systemtl status NetworkManager
-^tl^ctl  #将上一条命令中的tl改成ctl再执行一次 等同systemctl status NetworkManager
-systemctl start sshd
-^start^enable sshd  #等于执行systemctl enable sshd
-```
 
