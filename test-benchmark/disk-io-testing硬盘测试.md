@@ -104,7 +104,7 @@ stonewall
   - vsync - 使用 readv / writev，主要是会将相邻的 I/O 进行合并
   - psync - 对应的 pread / pwrite
   - pvsync / pvsync2 - 对应的 preadv / pwritev，以及 preadv2 / p writev2
-- In-depth  请求的io队列深度
+- io-depth  请求的io队列深度（即线程数量，对应其他测试工具的threads）
 - direct 取值1表示绕过buffer直接写入
 - zero_buffers  初始化系统buffer
 - rw或readdwrite  读写方式，取值：

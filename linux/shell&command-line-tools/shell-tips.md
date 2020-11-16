@@ -32,7 +32,21 @@ gnome-terminal -- python
   ```
 
 - `$MACHTYPE`  架构及操作系统等信息（例如输出x86_64-pc-linux-gnu）
+
 - `$EDITOR`  默认编辑器（某些软件会调用例如git commit时）
+
+# 判断命令是否可用
+
+判断某个命令是否可用，即判断是该命令在$PATH中。
+
+以检查命令ssh是否可用为例，以下方法均可在ssh存在的情下返回一些内容，code为0，不存时返回值为空 ，code为1：
+
+- `command -v ssh` 
+- `which ssh 2>/dev/null`
+- `type 2>/dev/null`
+- `hash ssh 2>/dev/null`
+
+
 
 # shell脚本相关
 

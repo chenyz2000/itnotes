@@ -27,6 +27,7 @@ Find-Module -Name xxx
 shutdow -s -t 0 #立即关机 shutdown
 shutdown -r -t 0 #立即重启 reboot
 logoff #登出（注销）
+sconfig #进入配置界面（命令行）
 ```
 
 
@@ -39,7 +40,7 @@ Firewall.cpl
 #查看防火墙状态
 netsh advfirewall show allprofiles
 #关闭防火墙
-netsh advfirewall set allprofiles state off #开启on
+netsh advfirewall set allprofiles state off #开启使用on
 ```
 
 
@@ -121,6 +122,8 @@ net start
 net start $serviceName
 net stop $serviceName
 
+#停止系统更新服务
+net stop 'Windows Update'
 ```
 
 

@@ -281,7 +281,7 @@ touch ~/Templates/sh.sh && echo '#!/bin/sh' > ~/Templates/sh.sh && chmod +x ~/Te
 - 截图
 
   - PrtScn  截取屏幕为图片（建议设为super+print避免误按）
-  - Shift+PrtScn  截取当前屏幕为图片
+  - Shift+PrtScn  截取选择区域为图片（按下后用鼠标拉选）
   - Alt+PrtScn  截取当前窗口为图片
   - Shift+Ctrl+Alt+r  录制屏幕/停止录制
 

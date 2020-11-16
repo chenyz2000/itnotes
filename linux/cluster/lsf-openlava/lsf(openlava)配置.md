@@ -1,3 +1,22 @@
+# 配置文件
+
+检查配置文件
+
+```shell
+badmin ckconfig
+lsadmin ckconfig #应当在管理节点执行 非管理节点执行会报fetal error
+```
+
+重新载入配置
+
+```shell
+badmin reconfig
+```
+
+
+
+
+
 # 资源限制
 
 资源管理配置文件`config/lsb.resources`，可调控用户在集群中可使用的资源配额。
@@ -82,3 +101,33 @@ End Limit
 - 删改节点
 
 参照增加节点的方法，删除和修改`/share/openlava/etc/lsb.hosts`配置，然后更新lsf配置。
+
+
+
+# 问题排查
+
+日志信息位于安装目录的`log/`下。
+
+- mbatchd.log
+
+  > GetElock: Last owner of lock file was on this host with pid <xxx>, attempting to take over lock file
+
+  1. 将`work/logdir/lsb.events`授权(`chown`)给` $LSF_ENVDIR/lsf.cluster.xxx`中设置的`Administrators`用户。
+
+     ```shell
+     chown hpcadmin lsb.events  #例如用户名是hpcamin
+     ```
+
+  2. 重启master节点的`sbatchd`进程
+
+     ```shell
+     pkill sbatchd
+     badmin hstartup
+     ```
+
+- bhosts max总是为1
+
+  检查lsb.hosts是否限制了slot数量
+
+  网络问题，通信不畅，执行`badmin reconfig`。
+

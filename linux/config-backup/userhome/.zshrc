@@ -25,7 +25,7 @@ DISABLE_AUTO_UPDATE="true"
 export UPDATE_ZSH_DAYS=99
 
 # Uncomment the following line if pasting URLs and other text is messed up.
-# DISABLE_MAGIC_FUNCTIONS=true
+DISABLE_MAGIC_FUNCTIONS=true
 
 # Uncomment the following line to disable colors in ls.
 # DISABLE_LS_COLORS="true"
@@ -153,8 +153,8 @@ elif [[ $os == Darwin ]]; then
   }
 
   #export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles
-  #export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles
-  export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.aliyun.com/homebrew/homebrew-bottles
+  export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles
+#  export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.aliyun.com/homebrew/homebrew-bottles
 
   alias update='brew update && echo ---outdated---  && brew outdated'
   alias upgrade='brew upgrade --cask && brew upgrade'
@@ -184,7 +184,7 @@ alias tc='export LANG=zh_TW.UTF-8 LC_CTYPE=zh_TW.UTF-8 LC_MESSAGES=zh_TW.UTF-8'
 alias en='export LANG=en_US.UTF-8 LC_CTYPE=en_US.UTF-8 LC_MESSAGES=en_US.UTF-8'
 
 #user login info
-alias lastb='sudo lastb'
+alias lastb='sudo lastb | tac'
 alias lastlog='lastlog|grep -Ev  "\*{2}.+\*{2}"'
 
 #---file operation---
@@ -196,7 +196,7 @@ then
   alias rm='mv -f --target-directory=$HOME/.local/share/Trash/files/'
 elif [[ -d /Users/levin/.Trash ]] 
 then
-  #alias rm='mv -f --target-directory=/Users/levin/.Trash'
+  alias rm='mv -f --target-directory=/Users/levin/.Trash'
 fi
 
 alias cp='cp -i'
@@ -232,6 +232,7 @@ alias 'nmap-ports'="sudo nmap -sS $(echo $gateway | cut -d '.' -f 1-3).0/24"
 alias 'nmap-hosts'="nmap -sP $(echo $gateway | cut -d '.' -f 1-3).0/24"
 alias 'nmap-os'="sudo nmap -O $(echo $gateway | cut -d '.' -f 1-3).0/24"
 
+
 #---vim plugin
 #pacman -S vim-plugin --no-comfirm
 alias vimpluginstall="curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
@@ -242,13 +243,18 @@ alias play='asciinema play'                                   #play record file
 
 #安装中文古诗词
 function install_fortune_gushici() {
-  #git clone --recursive https://github.com/shenyunhang/fortune-zh-data.git
-  #cd fortune-zh-data
   git clone git@github.com:ruanyf/fortunes.git
-  #mac brew
-  #cp -av fortunes/data/* /usr/local/Cellar/fortune/9708/share/games/fortunes
-  sudo cp -av fortunes/data/* /usr/share/fortunes/
+  if [[ $os = Darwin ]]
+  then
+    which fortune || brew install fortune
+    cp -av fortunes/data/* /usr/local/Cellar/fortune/9708/share/games/fortunes
+  elif [[ $(which pacman) ]]
+  then
+    sudo pacman -S fortunes --noconfirm
+    sudo cp -av fortunes/data/* /usr/share/fortunes/
+  fi
 }
+
 fortune -e tang300 song100 2>/dev/null #先秦 两汉 魏晋 南北朝 隋代 唐代 五代 宋代 #金朝 元代 明代 清代
 
 #-----DEV-----
@@ -272,11 +278,12 @@ fi
 
 #-Golang
 export  GOPROXY=https://mirrors.aliyun.com/goproxy/,direct
+gopath=/Users/levin/Library/golang
+[[ -d $gopath ]] && export GOPATH=$gopath
 
+#---macos PATH
+export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
 
-#-anaconda/miniconda
-#prevent auto active conda env, execute:
-#conda config --set auto_activate_base false
 
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
@@ -292,5 +299,11 @@ else
 fi
 unset __conda_setup
 # <<< conda initialize <<<
+
+alias condaclean='conda clean -d -a -y'
+
+#-anaconda/miniconda
+#prevent auto active conda env, execute:
+#conda config --set auto_activate_base false
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

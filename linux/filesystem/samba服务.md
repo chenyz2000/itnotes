@@ -4,19 +4,11 @@ Samba一种支持[SMB/CIFS](https://zh.wikipedia.org/wiki/%E4%BC%BA%E6%9C%8D%E5%
 
 ## Windows
 
-添加用户：
+### 共享目录
 
-```powershell
-net user 用户名 密码 /add
-```
+在文件夹的属性中开启共享即可，需要开启windows等共享功能。
 
-如果需要将用户添加进超级管理员，可以使用下边命令（只是共享写读需要的话，可以不用加入超级管理员角色）：
-
-```powershell
-net localgroup administrators 用户名 /add
-```
-
- 共享文件夹：
+或使用命令行共享文件夹：
 
 ```powershell
 #添加共享   可设置注释
@@ -27,11 +19,32 @@ net share <share_name> /del  #删除共享
 net share  #查看已经共享列表
 ```
 
+
+
+### 用户管理
+
+windows系统用户即是samba用户。
+
+在系统设置中管理用户即可。或使用命令行管理：
+
+```powershell
+net user 用户名 密码 /add  #添加用户
+net localgroup administrators 用户名 /add #加入用户组示例
+
+net user 用户名 /del      #删除用户
+
+net user 用户名 密码 /active  #更新密码
+```
+
 ## Linux
+
+### 应用安装
 
 安装`samba`，不同发行版可能包名不同，有的发行版将winbind模块拆分单独打包。
 
 启用`smb`和`nmb`服务（或名`smbd`或`nmbd`）。
+
+其他配置：
 
 - selinux: off
 
@@ -46,9 +59,9 @@ net share  #查看已经共享列表
     - UDP 138 ：NetBIOS 数据包
   - winbind   加AD域后提供名称解析服务(用于从NT服务器解析名称)
 
-### 配置
+### 共享目录
 
-主配置文件`/etc/samba/smb.conf`：
+主配置文件`/etc/samba/smb.conf`，示例：
 
 ```shell
 #===globale config===
@@ -140,7 +153,7 @@ samba配置中各项名字意义较为明了，也可参看[配置文件](https:
 
 ### 用户管理
 
-samba中使用的账户必须是linux系统中已经存在的账户，但是仍需单独将该系统账户添加到samba数据库中，并设置独立的密码（当然，可以同系统用户名密码相同）。
+samba中使用的账户必须是linux系统中已经存在的账户，但是仍需单独将该系统账户添加到samba数据库中，可设置独立的密码。
 
 samba用户管理主要使用`smbpasswd`命令。
 
@@ -160,7 +173,7 @@ smbpasswd -d <user>
 smbpasswd -e <user>
 ```
 
-提示：为了安全可以将仅用于samba服务的用户禁用shell登录
+提示，为了安全可以将，可将仅用于挂载samba共享目录的用户禁用shell登录：
 
 ```shell
 usermod -s /sbin/nologin
@@ -168,7 +181,7 @@ usermod -s /sbin/nologin
 
 
 
-查看smaba用户
+查看samba用户数据库中的用户：
 
 ```shell
 pdbedit -L

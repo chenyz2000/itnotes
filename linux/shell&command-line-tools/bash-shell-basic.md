@@ -1151,23 +1151,39 @@ done
 
 - while循环：expression中条件为真时进行循环：
 
-```shell
-while [ expression]
-do
-	#some codes
-done
-```
+  ```shell
+  while [ expression]
+  do
+  	#some codes
+  done
+  ```
 
-**无限循环`while true`可以简写为`while :`，或者用for语句简写为`for (( ; ; ))`。**
+  **无限循环`while true`可以简写为`while :`，或者用for语句简写为`for (( ; ; ))`。**
+
+  while循环按行读取和处理文件：
+
+  ```shell
+  while read line
+  do
+    #处理每行
+    echo $line #line就是每行的内容
+  done < filename
+  
+  #也可使用
+  cat filename | while read line
+  do
+  	echo $line
+  done
+  ```
 
 - until循环：**与while相反**，expression中条件为**假**时进行循环：
 
-```shell
-util [ expression ]
-do
-	#some codes
-done
-```
+  ```shell
+  util [ expression ]
+  do
+  	#some codes
+  done
+  ```
 
 # 函数
 

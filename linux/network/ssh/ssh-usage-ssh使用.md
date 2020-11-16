@@ -632,83 +632,152 @@ ssh命令中使用参数`-v`可输出详细的调试信息
 
 
 
-## 密钥问题
+## 密钥登录失败问题
 
-- 非root用户应上传公钥仍不能使用密钥登录（提示输入密码）：可能是selinux出于enforcing模式。
+已经上传公钥仍然不能免密码登录。
+
+- 可能是selinux处于enforcing模式
+
+  
+
+- 关闭了用户密钥登录
+
+  修改sshd_config：
+
+  ```shell
+  PubkeyAuthentication yes #默认注释 值为yes
+  ```
+
+  
 
 - > error fetching identities for protocol 1: agent refused operation
+
+  在客户端执行：
 
   ```shell
   eval "$(ssh-agent -s)"
   ssh-add
   ```
 
+  
+
 - 已经进行ssh密钥认证而提示输入密码
 
-  - 确保用户家目录权限至少700
+  - 重要目录/文件权限问题——权限过于宽松
 
-  - 确保`.ssh`文件夹权限为700，`authorized_keys`及公私钥文件的权限为`600`
+    ssh服务端的sshd_config中`StrictModes`设置为`off`（需要去掉注释）可关闭对服务的重要目录/文件的权限检查，但不建议！
 
+    
+  
+    - ssh服务端的用户家目录权限
+  
+      一般用户家目录权限为700（rwx-----），或者开发了同组用户的访问权限如750，权限为777可能会影响
+
+      ```shell
+  chmod o-rwx /path/to/home  #该用户的家目录
+      #或者
+    chmod 700 /path/to/home  #或者最少750
+      ```
+    
+    - 服务端和客户端`$HOME/.ssh`目录及目录下文件的权限
+    
+      服务端和客户端`.ssh`文件夹权限为700，`.ssh`目录中的权限全设置成600即可（尤其是密钥文件，其他一些文件可以是644，如`.ssh/config`）：
+    
+      ```shell
+      chmod 600 ~/.ssh/* && chmod 700 ~/.ssh
+      ```
+    
+    
+    
+  - ssh服务端是否禁用了密钥认证，查看`/etc/ssh/sshd_config`
+  
     ```shell
-    chmod 600 ~/.ssh/* && chmod 700 ~/.ssh
-    ```
-
+  #PubkeyAuthentication yes #默认yes且注释 未注释且为no则关闭密钥认证
+    AuthorizedKeysFile      .ssh/authorized_keys
+  #检查以下几行 默认值为如下内容（默认注释）
+    #AuthorizedPrincipalsFile none
+    #AuthorizedKeysCommand none
+    #AuthorizedKeysCommandUser nobody
+  ```
+    
+  修改后重启sshd服务。
+    
   - 客户端存在多个密钥对时，可能需要指定使用的私钥
-
-    使用`-i`指定**私钥** ：
-
+  
     ```shell
     ssh -i /path/to/private-key/ [-p port] user@host
     ```
 
+
+
 ## 登录卡慢但是能够登录成功
 
-这里的卡或慢不包括因为网络因素问题（比如与远程主机之间的网络很差、远程主机防火墙监测时间过长）
+以下所述的卡或慢不包括因为网络因素问题（比如与ssh服务器之间的网络很差、安全防火墙等工具/设备检查时间过长）。
 
 - 服务端polkit或systemd-logind问题
 
-  依次使用systemctl status查看sshd、systemd-logind和polkit状态，如果法有有错误信息（一般为红色），重启有问题的服务。
+  依次使用systemctl status查看sshd、systemd-logind和polkit状态，如果有错误信息（一般为红色），重启有问题的服务。
 
-  如果问题仍然存在，重装polkit、openssh-server等软件包，重启服务和整个系统。
+  如果polkit服务重启后其状态仍不正常，重装（覆盖安装）polkit、openssh-server等软件包，重启服务和整个系统。
+
+  
 
 - 服务端设置了GSS认证（GSSAPIAuthentication，公共安全事务认证）
 
-  - `GSSAPIAuthentication` 是否允许使用基于 GSSAPI 的用户认证，默认值为"no"。
-  - `GSSAPICleanupCredentials` 是否在用户退出登录后自动销毁用户凭证缓存，默认值为"yes"。
+  如果不使用GSS，修改sshd_config禁止GSS认证，重启sshd服务。
 
-  若服务器开启了该验证机制，但客户端并未使用该身份验证机制，则会导致验证过程出现延迟。
+  ```shell
+  GSSAPIAuthentication no
+  ```
 
-  释掉服务端`/etc/ssh/sshd_config`中的`GSSAPI`相关行，或者设置相关行值为`no`，重启sshd服务。
+  
 
 - 服务端设置了DNS查询
 
-  服务器根据客户端IP进行DNS查询，但DNS因为（各种网络因素）查询时间过长或者查询失败。`/etc/ssh/sshd_config`中的`UseDNS`设置为`no`，重启sshd服务。
+  如果服务器根据客户端IP进行DNS查询，ssh实际上用不上查询DNS，默认进行DNS查询，因为（各种网络因素）查询时间过长（还可能查询失败）。
+  
+  修改sshd_config禁止使用DNS查询，重启sshd服务。
+  
+  ```shell
+  UseDNS no
+  ```
+  
+  
 
 ## 各种登录失败问题
 
-- 目标服务器上无该帐号，常见原因是目标服务器使用某些用户信息同步工具（如nis），但是目标服务器的相关服务（如nis的ypbind服务未启动），因而找不到该帐号。
+- ssh服务器上无该用户
+
+  
+
+- ssh服务器上该用户未设置密码
+
+  
 
 - `System is booting up. See pam_nologin(8)`
 
   删除服务端的`/var/run/nologin`或`/etc/nologin`或`/var/nologin`或`/run/nologin`等文件。
 
+  
+
 - ` REMOTE HOST IDENTIFICATION HAS CHANGED` 远程主机公钥未能通过主机密钥检查
 
-  客户端首次登录ssh服务器时，客户端会记录服务器的公钥信息到`~/.ssh/known_hosts`（已知主机列表）文件中，每个主机一行。
+  客户端首次登录ssh服务器时，客户端会记录服务器的公钥信息，如果连接服务器时，服务器公钥与know_hosts列表中记录的公钥不同（例如远程主机更改了密钥），就会校验不通过。
 
-  如果连接服务器时，服务器公钥与know_hosts列表中记录的公钥不同（例如远程主机更改了密钥），就会校验不通过。
-
-  解决方案：
+  可以：
   - 删除客户端`.ssh/known_hosts`文件中检查不通过的ssh服务器的公钥信息
+
   - 关闭客户端的严格主机密钥检查(strict host key check)
 
-  在`.ssh/config`（或`/etc/ssh/ssh_config`）中添加
+    在`.ssh/config`（或`/etc/ssh/ssh_config`）中添加或设置：
 
-  ```shell
-  StrictHostKeyChecking no
-  ```
+    ```shell
+    StrictHostKeyChecking no
+    ```
 
-  如果无需严格的主机密钥检查，也可以将已知主机信息文件指向`/dev/null`。
+    如果无需严格的主机密钥检查，也可以将已知主机信息文件指向`/dev/null`。
+
+    
 
 - `command not found` 执行远程命令提示找不到命令
 
@@ -725,6 +794,8 @@ ssh命令中使用参数`-v`可输出详细的调试信息
     /usr/sbin/lspci
     ```
 
+  
+
 - `Permission denied (publickey,gssapi-keyex,gssapi-with-mic)`
 
   检查服务端`/etc/ssh/sshd_config`是否关闭了密码登录。如需开启密码登录，修改该行：
@@ -733,7 +804,9 @@ ssh命令中使用参数`-v`可输出详细的调试信息
   PasswordAuthentication no #注释该行或值改为yes 再重启sshd服务
   ```
 
-- 协议不支持问题
+  
+
+- 协议不支持
 
   均可以升级服务器/客户端的ssh程序版本解决。
 

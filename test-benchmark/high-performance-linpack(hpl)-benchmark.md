@@ -117,6 +117,8 @@ HPL测试常用组合选择：
 
 # HPL安装
 
+如果使用 [intel mkl bechmarks suit](https://software.intel.com/en-us/articles/intel-mkl-benchmarks-suite) ，解压即可，略过安装步骤。
+
 下载[hpl](http://www.netlib.org/benchmark/hpl/)，解压后进入hpl目录。
 
 如果安装有gcc、mpich、blas等开源库，且在环境变量中已经生效，一般可直接按照普通的编译三步骤编译即可：
@@ -262,44 +264,109 @@ TOPdir       = /root/hpl-2.3
 
 # HPL测试
 
+##  使用自行编译的hpl测试
+
 可参看源码目录中的`TUNNING`文件以及`testing`目录中的内容。
 
 在集群测试中，一般将将测试程序xhpl及HPL.dat等文件放置到集群共享目录中。
 
-- 使用自行编译的hpl测试：
+在hpl源码目录中的testing目录的子目录中有HPL.dat样本，参看[HPL.dat参数](HPL.dat参数)修改，在HPL.dat文件所在目录下执行xhpl程序即可。
 
-  在hpl源码目录中的testing目录的子目录中有HPL.dat样本，参看[HPL.dat参数](HPL.dat参数)修改，在HPL.dat文件所在目录下执行xhpl程序即可。
+```shell
+./xhpl #仅单cpu测试（P Q均为1）
+mpirun –n <N> xhpl    #N为进程数(N>=PxQ)
+mpirun -f <nodes_file> -np <N> xhpl  #多节点并行
+```
+
+nodes_file文件中每行为一个节点的地址（IP或hostname），如：
+
+```shell
+192.168.1.1
+192.168.1.2
+```
+
+初始的HPL.dat文件无法满足需求，需要对其进行修改，参看hpl data文件相关说明修改。
+
+## 使用intel-mkl-benchmark工具测试
+
+intel安装目录下的`mkl/benchmarks`的`linpack`及`mplinpack`测试工具，或者单独的[intel mkl bechmarks suit](https://software.intel.com/en-us/articles/intel-mkl-benchmarks-suite)解压后也能找到benchmarks目录。
+
+
+
+- linpack目录
+
+  该目录的文件
+
+  - help.lpk        输入参数相关的帮助文件
+
+  - xhelp.lpk      程序使用帮助文件
+
+  - runme_xeon64
+
+    可直接执行linpack测试的程序
+
+  - lininput_xeon64
+
+    输入文件，直接运行`./runme_xeon64`将读取该文件，据需要可对其参数进行修改，示例：
+
+    ```shell
+    64                     # number of tests 测试方程组数量
+    35000 40000 45000 # problem sizes 问题规模 （可多个规模）
+    30000 35000 40000 45000 # leading dimensions 矩阵唯独
+    1 2 3 1 # times to run a test 每个问题规模下的运行次数
+    1 1 4 4 # alignment values (in KBytes) 内存地址对齐值
+    ```
+
+    
+
+  - lin_xeon64.txt
+
+    `./runme_xeon64`运行完成后生成的结果文件。
+
+  - xlinpack_xeon64
+    另一个测试程序，需输入参数或指定输入文件，或者指定输入文件。
+
+    
+
+    执行`./xlinpack_xeon64`后进入交互命令行，根据提示输入相关参数：
+
+    1. `Input data or print help ? Type [data]/help` 
+
+       回车继续或输入help查看帮助。
+
+    2. `Number of equations to solve (problem size)` 问题规模（方程数量）
+
+       一个数值，如50000。
+
+    3. `Leading dimension of array` 矩阵主维度
+
+       一个不小于问题规模的值（如果不输入或输入值小于问题规模之，将被设置为和问题规模一样大的值），如不了解输入值同问题规模即可。
+
+    4. `Number of trials to run`  运行次数
+
+       即在该问题规模下运行多少次
+
+    5. `Data alignment value (in Kbytes)`  内存地址对齐值
+
+    6. 如不了解输入4或8。
+
+    
+
+  测试示例：
 
   ```shell
-  ./xhpl #仅单cpu测试（P Q均为1）
-  mpirun –n <N> xhpl    #N为进程数(N>=PxQ)
-  mpirun -f <nodes_file> -np <N> xhpl  #多节点并行
-  ```
-
-  nodes_file文件中每行为一个节点的地址（IP或hostname），如：
-
-  ```shell
-  192.168.1.1
-  192.168.1.2
-  ```
-
-  初始的HPL.dat文件无法满足需求，需要对其进行修改，参看hpl data文件相关说明修改。
-
-- 使用intel mkl的hpl工具测试
-
-  intel安装目录下的`mkl/benchmarks`的`linpack`及`mplinpack`测试工具，或者单独的[intel mkl bechmarks suit](https://software.intel.com/en-us/articles/intel-mkl-benchmarks-suite)。单个节点测试使用`linpack`目录下的文件即可，多节点测试使用`mplinpack`。
-
-  ```shell
-  #linpack目录 测试如：
-  ./xlinpack_xeon64 lininput_xeon64
-  mpirun -n <N> ./runme_xeon64
+  ./runme_xeon64  #直接运行默认的测试
   
-  #mplinpack目录
-  #其中HPL.dat 主要配置计算的问题规模、计算块、CPU 的行列矩阵分配，
-  #runme_intel64_static 文件主要配置运行总的进程数和每个节点的进程数
+  ./xlinpack_xeon64 #回车后以此输入参数后进行测试
+  
+  ./xlinpack_xeon64 lin.input  #指定lin.input为输入文件
   ```
 
   
+
+
+
+
 
 # HPL NVIDIA GPU 版
 
@@ -491,7 +558,7 @@ HPL.out      output file name (if any)
 #以下三行 二维处理器网格 PxQ=系统CPU process数  其中 P<=Q  且P=2^n较优
 3            # of process grids (P x Q)  使用几组网格
 1  2  4       Ps   #P<=Q P*Q<=总process数量
-16 8  4        Qs  #
+16 8  4       Qs  #
 
 # 以下一行 余数的阈值（用以检测求解结果）
 16.0         threshold
@@ -525,7 +592,7 @@ HPL.out      output file name (if any)
 # 以下一行 平衡策略
 1            Equilibration (0=no,1=yes)
 
-# 以下一行 内存地址对齐
+b
 8            memory alignment in double (> 0)
 
 ##### This line (no. 32) is ignored (it serves as a separator). ######
