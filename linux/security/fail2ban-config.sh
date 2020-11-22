@@ -21,24 +21,20 @@ maxretry=5
 
 #-----
 
-function install_fail2ban(){
-  if [[ $(which pacman 2>/dev/null) ]]
-  then
+function install_fail2ban() {
+  if [[ $(which pacman 2>/dev/null) ]]; then
     pacman -Syy fail2ban --no-confirm
-  elif [[ $(which yum 2>/dev/null) ]]
-  then
+  elif [[ $(which yum 2>/dev/null) ]]; then
     #yum install -y epel-release
     #yum makecache
     yum install -y fail2ban
-  elif [[ $(which apt 2>/dev/null) ]]
-  then
+  elif [[ $(which apt 2>/dev/null) ]]; then
     apt install -y fail2ban
   else
     echo --
   fi
 
 }
-
 
 function check_fail2ban_app() {
 
@@ -47,7 +43,6 @@ function check_fail2ban_app() {
     exit
   fi
 }
-
 
 function add_vnc_auth_filter() {
   echo "[Definition]
@@ -96,6 +91,8 @@ function add_jails() {
   echo "-------------"
   read select_jails
 
+  echo "---selected jails: ${select_jails[*]}"
+
   [[ "$select_jails" ]] || select_jails='0'
   for select_jail in $select_jails; do
     local this_jail=${jails[$select_jail]}
@@ -124,19 +121,35 @@ enabled = true
 function gen_scripts() {
   #banip
   echo '#!/bin/bash
-sudo fail2ban-client set sshd banip "$@"
+jail=$1
+ip="${@:2:$#}"
+
+#if [[ $(echo $ip |grep -Eo "[0-9\. ]") ]]
+if [[ "$ip" ]]
+then
+  sudo fail2ban-client set $jail banip "$ip"
+else
+  echo "usage: banip ip [jail_name]"
+  echo "tip: default jail is sshd"
+fi
 ' >/usr/local/bin/banip
 
   #unbanip
   echo '#!/bin/bash
-case "$@" in
-  all)
-    sudo fail2ban-client unban --all
-    ;;
-  *)
-    sudo fail2ban-client set sshd unbanip "$@"
-  ;;
-esac
+jail=$1
+ip="${@:2:$#}"
+
+if [[ $ip == 'all' ]]
+then
+  sudo fail2ban-client unban --all
+#elif [[ $(echo $ip |grep -Eo "[0-9]+[0-9\.]+[0-9]") ]]
+if [[ "$ip" ]]
+then
+  sudo fail2ban-client set $jail unbanip $ip
+else
+  echo "usage: unbanip ip [jail_name]"
+  echo "tip: default jail is sshd"
+fi
 ' >/usr/local/bin/unbanip
 
   #ignore ip
@@ -151,23 +164,35 @@ sudo fail2ban-client set sshd delignoreip "$@"
 
   ##sshd blacklist
   echo '#!/bin/bash
-jail=$1
-jail=${jail:-sshd}
-sudo fail2ban-client status ${jail}
+jail=${1:-sshd}
 
-echo
-echo "usage blacklist [jail_name]
-eg. blacklist sshd
-"
-if [[ $jail == sshd ]]
+if [[ $jail == 'all' ]]
 then
-  echo "=====commands for sshd jail=====
+  jail_list=$(grep -Eo "\[.+\]" /etc/fail2ban/jail.d/jail.local |grep -v DEFAULT)
+  for jail_item in ${jail_list[*]}
+  do
+    jail_name=${jail_item:1:-1}
+    echo -e "\e[1m +++++jail $jail_name +++++ \e[0m"
+    sudo fail2ban-client status ${jail_name}
+  done
+else
+  sudo fail2ban-client status ${jail}
+fi
+
+echo -e "\e[1m ++++++++++ \e[0m"
+echo "usage blacklist [jail_name|all]
+eg. 
+blacklist sshd   #default jail_name is sshd
+blacklist vsftpd
+"
+
+echo "=====commands for $jail jail=====
 banip [ip1 ip2]        : ban 1 IP or more IPs, eg, banip 8.8.8.8 9.9.9.9
 unbanip [ip1 ip2]      : unban 1 IP or more IPs
 unbanip all            : unban all IPs
 ignoreip [ip1 ip2]     : ignore 1 IP or more IPs
 delignoreip [ip1 ip2]  : delete a ignored IP"
-fi
+
 ' >/usr/local/bin/blacklist
 
   chmod +x /usr/local/bin/{banip,unbanip,delignoreip,ignoreip,blacklist}

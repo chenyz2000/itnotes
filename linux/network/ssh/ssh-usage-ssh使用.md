@@ -118,17 +118,17 @@ ssh user@target-host #从跳板机登录到最终目标主机
   或者在`~/.ssh/config`中进行配置如下内容，然后使用`ssh target`直接登录到target：
 
   ```shell
-  Host jump #跳板机配置
-      HostName 10.10.1.1
-      Port 2333
-      User user1
+  Host jump               #跳板机配置
+      HostName 10.10.1.2  #跳板机地址
+      Port 22             #跳板机ssh端口 22可省略该行
+      User user_at_proxy  #跳板机上的用户
 
-  Host target #目标主机配置
-      HostName 10.10.10.10
-      Port 1010
-      User user
+  Host target             #目标主机配置
+      HostName 10.10.10.1 #目标主机地址（即直接从跳板机上ssh到目标主机的地址）
+      Port 2222           #跳板机ssh端口 22可省略该行
+      User user_at_target #目标主机上的用户
       ForwardAgent yes
-      ProxyCommand ssh jump -q -W %h:%p
+      ProxyCommand ssh jump -q -W %h:%p  #%h和%p表示jump中的hostname和port
   ```
 
 ## 转发认证
@@ -220,36 +220,6 @@ ssh -t <host> 'cd /tmp;bash'
 vim scp://user@host[:port]//path/to/file
 ```
 
-# X转发
-
-转发远程主机上应用程序的X11图形界面到本机。X转发的要求：
-
-- 服务端
-  - xorg-server，xorg-xauth，启动X服务。
-
-  - 确保`sshd_config`关于X的配置如下：
-
-    ```shell
-    X11Forwarding yes
-    X11DisplayOffset 10
-    X11UseLocalhost no
-    ```
-- 客户端
-
-  - 有X 环境
-  
-    提示：windows需要安装x实现如Xming等，macos可安装xquartz。
-  
-    ```shell
-    #打开远程主机的firefox （或者登录到远程主机上再执行命令）
-    ssh -X user@host firefox  #或配置ForwardX11 yes 则可不写出-X
-    #或
-    ssh -Y user@host firefox  #或者ForwardX11Trusted yes 则可不写出Y
-    ```
-
-- `-X`  远程机器将被视为不受信任的客户端，本地客户端向远程机器发送命令并接收图形输出，如果某些命令违反了某些安全设置，将收到错误提示。 可在客户端ssh配置中添加。
-- `-Y`  远程机器将被视为受信任的客户端。 （其他图形(X11)客户端可以从远程机器中嗅探数据（制作屏幕截图、做键盘记录和其他讨厌的东西，甚至可以更改这些数据。）
-
 # 端口转发
 
 > 隧道是一种把一种网络协议封装进另外一种网络协议进行传输的技术。
@@ -272,7 +242,38 @@ vim scp://user@host[:port]//path/to/file
 
   **”反向(代理)“ 代理服务端**：反向代理代表服务器为客户端提供服务，使真实服务器对客户端不可见。
 
-  (第2个代理是动词)
+## X转发
+
+转发远程主机上应用程序的X11图形界面到本机。X转发的要求：
+
+- 服务端
+
+  - xorg-server，xorg-xauth，启动X服务。
+
+  - 确保`sshd_config`关于X的配置如下：
+
+    ```shell
+    X11Forwarding yes
+    X11DisplayOffset 10
+    X11UseLocalhost no
+    ```
+
+- 客户端
+
+  - 有X环境
+
+    提示：windows需要安装x实现如Xming等，macos可安装xquartz。
+
+    ```shell
+    #打开远程主机的firefox （或者登录到远程主机上再执行命令）
+    ssh -X user@host firefox  #或配置ForwardX11 yes 则可不写出-X
+    #或
+    ssh -Y user@host firefox  #或者ForwardX11Trusted yes 则可不写出Y
+    ```
+
+- `-X`  远程机器将被视为不受信任的客户端，本地客户端向远程机器发送命令并接收图形输出，如果某些命令违反了某些安全设置，将收到错误提示。 可在客户端ssh配置中添加。
+
+- `-Y`  远程机器将被视为受信任的客户端。 （其他图形(X11)客户端可以从远程机器中嗅探数据（制作屏幕截图、做键盘记录和其他讨厌的东西，甚至可以更改这些数据。）
 
 ## 动态端口转发（socks代理）
 
@@ -309,20 +310,24 @@ ssh -fCNTD *:2333 user@hostP
 
 ## 本地端口转发
 
-将本地主机的某个端口（通过中间主机）转发到远端指定机器的指定端口。
-在本地主机上分配了一个 socket 侦听端口， 一旦这个端口上有了连接， 该连接就经过ssh隧道转发到程主机的端口上。
-
-```shell
-客户端C----->本地主机L----->远程主机R
-```
-
-本地转发中：
-
-- 本地主机L：既是执行转发命令的主机，
-- 远程主机R：最终提供服务的目标主机。
+将本地主机的某个端口转发到远端指定机器的指定端口。
 
 ```shell
 ssh -L [bind_address:]<local-port>:<target-host>:<target-port> [user>@]<local-host>
+```
+
+将本地主机的指定端口和远端主机的目标端口绑定，本地主机上分配了一个 socket 侦听端口， 一旦本地主机端口上有了连接，该连接就经过ssh隧道转发到程主机的端口上。
+
+```shell
+客户端C---->本地主机端口----->远程主机端口（提供服务者）
+```
+
+
+
+*本章节涉及转发的本地主机/远端主机只是一种区分式表述，本地主机是执行转发命令的主机。不过实际上将本机的一个端口转发到本机同一IP多其他端口也是可以的。例如在主机a上执行：*
+
+```shell
+ssh -FCNL 127.0.0.8080:127.0.0.1:80 user@localhost
 ```
 
 
@@ -342,20 +347,16 @@ ssh -fNCL *:8080:www.kernel.org:80 user@localhost
 
 将远程主机的某个端口转发到本地端指定机器的指定端口。
 
-本地主机主动向远程主机发起连接，建立反向隧道。远程主机上分配了一个 socket 侦听端口，一旦这个端口上有了连接，该连接就经过ssh隧道转发到本地主的端口。
-
 ```shell
-C客户端----->远程主机R----->本地主机L
+ssh -R [bind_address:remote-port:<local-host>:<local-port> [<remote-user>@]<remote-host>
 ```
 
-远程转发中：
-
-- 本地主机L：既是执行转发命令主机，也是最终提供服务的目标主机。
-- 远程主机R：作为流量转发的中间代理主机。
+将远程主机的指定端口和本地主机的端口绑定，本地主机主动向远程主机发起连接，建立反向隧道。远程主机上分配了一个 socket 侦听端口，一旦这个端口上有了连接，该连接就经过ssh隧道转发到本地主机的这个目标端口。
 
 ```shell
-ssh -R [bind_address:port:<local-host>:<local-port> [<remote-user>@]<remote-host>
+客户端----->远程主机端口----->本地主机端口（提供服务者）
 ```
+
 
 
 应用场景举例：内网穿透。在内网服务器与公网服务只见建立反向隧道，转发公网服务器的2222端口到内网服务器的22端口，用户访问公网服务器的2222端口即访问内网服务器的22端口。
@@ -698,6 +699,7 @@ ssh命令中使用参数`-v`可输出详细的调试信息
     #AuthorizedPrincipalsFile none
     #AuthorizedKeysCommand none
     #AuthorizedKeysCommandUser nobody
+    ```
   ```
     
   修改后重启sshd服务。
@@ -706,7 +708,7 @@ ssh命令中使用参数`-v`可输出详细的调试信息
   
     ```shell
     ssh -i /path/to/private-key/ [-p port] user@host
-    ```
+  ```
 
 
 

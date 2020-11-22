@@ -194,9 +194,6 @@ alias la='ls -lah'
 if [[ -d $HOME/.local/share/Trash/files ]]
 then
   alias rm='mv -f --target-directory=$HOME/.local/share/Trash/files/'
-elif [[ -d /Users/levin/.Trash ]] 
-then
-  alias rm='mv -f --target-directory=/Users/levin/.Trash'
 fi
 
 alias cp='cp -i'
@@ -214,6 +211,8 @@ alias px='proxychains4'
 
 # ssh server
 alias sshstart='sudo systemctl start sshd'
+# mosh
+alias mosh="en && mosh "
 
 #iconv -- file content encoding
 alias iconvgbk='iconv -f GBK -t UTF-8'
@@ -276,7 +275,7 @@ if [[ $os == Darwin && -f /usr/local/bin/R ]]; then
 #export CPPFLAGS="-I/usr/local/opt/openblas/include"
 fi
 
-#-Golang
+#-Golang |only gopaht need set. default gopath is ~/go
 export  GOPROXY=https://mirrors.aliyun.com/goproxy/,direct
 gopath=/Users/levin/Library/golang
 [[ -d $gopath ]] && export GOPATH=$gopath
@@ -300,7 +299,7 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
-alias condaclean='conda clean -d -a -y'
+alias condaclean='conda clean -ady'
 
 #-anaconda/miniconda
 #prevent auto active conda env, execute:

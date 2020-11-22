@@ -491,20 +491,22 @@ else:
     print 'roadman'     # 条件均不成立时输出
 ```
 
-### 三元表达式
+### “三元表达式”
 
 在其他语言中三元表达为：`判断条件?为真时的值:为假时的值`
 
+例如javascript
+
 ```javascript
 const x=0
-x==0?'数字是0':'数字不是0'
+console.log(0?'数字是0':'数字不是0')
 ```
 
-python写法：
+python只能使用如下写法：
 
 ```python
 x=0
-print('数字是0') if x==0 else print('数字不是0')
+print('数字是0' if x==0 else '数字不是0')
 ```
 
 ## 循环

@@ -34,16 +34,19 @@ options='-o TCPKeepAlive=yes -o ServerAliveInterval=60 -o ServerAliveCountMax=10
 #When you have many hosts using this script for forwarding, it is better to design a unique name for this file on each host, which can describe the local information and distinguish it from other hosts. 当你有许多主机使用该脚本进行转发，最好为每一个主机上该文件设计一个独特的名字，能够描述本机信息，以及和其他主机区分
 
 #important! ssh proxy info file, if it was empty, fallback value is $HOSTNAME-$remotePort  重要 记录本次ssh转发信息的文件名字，如果为空，将使用备用值$HOSTNAME-$remotePort
-ssh_proxy_info_file='' #eg. home-nas
+ssh_proxy_info_file="$HOSTNAME" #eg. home-nas
 
 #ssh proxy info file path on the remote host, default is ~/proxy-hosts 远程主机上存放ssh转发信息文件的目录路径，默认是~/proxy-hosts
 info_file_dir_on_remoteHost=proxy-hosts
 
-#comments text will add to $ssh_proxy_info_file, allow empty, default is $(uname -a) 本机注释信息将添加到$ssh_proxy_info_file中，可以为空，默认为$HOSTNAME: $(uname -a)
+#comments text will add to $/tmp/ssh_proxy_info_file, allow empty, default is $(uname -a) 本机注释信息将添加到$/tmp/ssh_proxy_info_file中，可以为空，默认为$HOSTNAME: $(uname -a)
 localhost_comment="$HOSTNAME: $(uname -a)" #eg. this is a nas server at home  例如: 家里的NAS
 
-#ssh key auth
-action=$1 #
+action=${1:proxy} #
+
+restart_ssh_proxy_at_hour=2 #Restart sshproxy at the same time every xx clock ,eg. 2:00
+
+cron_interval_min=10 #cron task interval
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~
 #===action ｜ install
@@ -56,6 +59,7 @@ function exec_action() {
         ssh-copy-id -p $remotePort $remoteUser@$remoteHost
 
         #add a cron task 添加一个cron任务
+        echo "+++++++++++++"
         echo "Add sshproxy as a crond task? 添加sshproxy为crond任务？[y/n]"
         echo "[y]:"
         read as_a_cron_task
@@ -65,12 +69,14 @@ function exec_action() {
             if [[ -f /var/spool/cron/$USER ]]; then
                 sed -i "/$script_path/d" /var/spool/cron/$USER
                 crontab -l >/tmp/sshproxy_cron
-                echo "*/10 * * * * $script_path" >>/tmp/sshproxy_cron
+                echo "@reboot $script_path
+                */$cron_interval_min * * * * $script_path" >>/tmp/sshproxy_cron
                 crontab /tmp/sshproxy_cron
             else
-                echo "*/10 * * * * $script_path" >/tmp/sshproxy_cron
+                echo "*/$cron_interval_min * * * * $script_path" >/tmp/sshproxy_cron
                 crontab /tmp/sshproxy_cron
             fi
+            crontab -l
             ;;
         *)
             echo
@@ -97,12 +103,14 @@ function check_ssh_params() {
     [[ -f $private_key ]] && echo "[ERR]: Can not find ssh private key file : $private_key !" >>$log && exit 1
 
     #check ssh proxy info file
-    if [[ -z $ssh_proxy_info_file ]]; then
-        ssh_proxy_info_file=${HOSTNAME}-$remotePort
-        echo "[WARN]: param ssh_proxy_info_file is empty! Fallback: ==> $ssh_proxy_info_file " >>$log
+    if [[ -z "$/tmp/ssh_proxy_info_file" ]]; then
+        /tmp/ssh_proxy_info_file=${HOSTNAME}-$remotePort
+        echo "[WARN]: param /tmp/ssh_proxy_info_file is empty! Fallback: ==> $/tmp/ssh_proxy_info_file " >>$log
     fi
 
-    [[ -z $localhost_comment ]] && localhost_comment="$HOSTNAME-$(uname -a)"
+    if [[ -z "$localhost_comment" ]]; then
+        localhost_comment="$HOSTNAME-$(uname -a)"
+    fi
 }
 
 #===proxy log 日志
@@ -123,21 +131,28 @@ function check_log_file() {
 #======checking 转发前检查
 function check_ssh_forwarding() {
     #check ssh process 查找进程中是否已经存在指定的ssh转发进程
-    forwarding_process_info=$(ps -aux | grep $proxyPort:$localHost:$localPort | grep -v grep)
-
-    #get ssh forwarding process PID 获取转发进程到PID
-    [[ -n $forwarding_process_info ]] && forwarding_pid=$(echo $forwarding_process_info | awk '{print $2}')
+    local forwarding_process_info=$(ps -aux | grep $proxyPort:$localHost:$localPort | grep -v grep)
 
     #If the process already exists 如果转发进程已经存在
     if [[ -n $forwarding_process_info ]]; then
         #check state of remote host forwarding port 检查远程主机上转发端口状态
-        if [[ $(timeout 5 ssh -p $remotePort $remoteUser@$remoteHost "ss -tlpn |grep :$proxyPort") ]]; then
-            #proxy服务器上ssh进程状态正常 退出
-            echo "Good! sshproxy is running." >>$log
-            exit 1
-        else
-            #proxy服务器上ssh进程未检查到 或者链接到proxy服务器超时 终止本地到转发进程
+        # if [[ $(timeout 5 ssh -p $remotePort $remoteUser@$remoteHost "ss -tlpn |grep :$proxyPort") ]]; then
+        #     #proxy服务器上ssh进程状态正常 退出
+        # echo "Good! sshproxy is running." >>$log
+        # exit 0
+        # else
+        #get ssh forwarding process PID 获取转发进程到PID
+        #proxy服务器上ssh进程未检查到 或者链接到proxy服务器超时 终止本地到转发进程
+        # kill -9 $forwarding_pid
+        # fi
+        #半夜两点断开进程重新连接
+        if [[ $(date +%H) -eq 2 ]]; then
+            local forwarding_pid=$(echo $forwarding_process_info | awk '{print $2}')
             kill -9 $forwarding_pid
+            echo "restart ssh proxy"
+        else
+            echo "Good! sshproxy is running." >>$log
+            exit 0
         fi
     fi
 }
@@ -153,7 +168,7 @@ function ssh_remote_forwarding() {
 
     echo "---start ssh proxy---" >>$log
     local errlog=$(mktemp)
-    ssh -gfCNTR $proxyPort:$localHost:$localPort $remoteUser@$remoteHost -i $private_key -p $remotePort $options 1>>$log 2>errlog
+    ssh -gfCNTR $proxyPort:$localHost:$localPort $remoteUser@$remoteHost -i $private_key -p $remotePort $options 1>>$log 2>$errlog
 
     ##ssh参数说明
     #-g 允许远程主机连接转发端口
@@ -181,9 +196,9 @@ function ssh_remote_forwarding() {
         ++++++info end+++
         SSH Remote Forwarding:
           target-host <-- remote forwarding --> $remoteHost
-          " >$ssh_proxy_info_file
+          " >/tmp/$ssh_proxy_info_file
 
-    scp -P $remotePort $ssh_proxy_info_file $remoteUser@$remoteHost:~/$info_file_dir_on_remoteHost/ >/dev/null
+    scp -P $remotePort /tmp/$ssh_proxy_info_file $remoteUser@$remoteHost:~/$info_file_dir_on_remoteHost/ >/dev/null
 }
 
 #+++++++++

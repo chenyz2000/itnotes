@@ -22,6 +22,8 @@ tar -tf file.tar[.xz/gz.bz]
 tar -cvf test.tar test
 #解包
 tar -xvf test.tar test
+#仅解包 部分内容 ｜可先查看内容确定相对路径 如data/abc
+tar -xvf test.tar data/abc #仅解开data/abc目录
 ```
 
 常用参数：
