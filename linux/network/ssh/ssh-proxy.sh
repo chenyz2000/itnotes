@@ -40,7 +40,7 @@ ssh_proxy_info_file="$HOSTNAME" #eg. home-nas
 info_file_dir_on_remoteHost=proxy-hosts
 
 #comments text will add to $/tmp/ssh_proxy_info_file, allow empty, default is $(uname -a) 本机注释信息将添加到$/tmp/ssh_proxy_info_file中，可以为空，默认为$HOSTNAME: $(uname -a)
-localhost_comment="$HOSTNAME: $(uname -a)" #eg. this is a nas server at home  例如: 家里的NAS
+localhost_comment="$HOSTNAME" #eg. this is a nas server at home  例如: 家里的NAS
 
 action=${1:proxy} #
 
@@ -48,6 +48,7 @@ restart_ssh_proxy_at_hour=2 #Restart sshproxy at the same time every xx clock ,e
 
 cron_interval_min=10 #cron task interval
 
+check_timeout=30 #max secs for checking ssh session status
 #~~~~~~~~~~~~~~~~~~~~~~~~~~
 #===action ｜ install
 function exec_action() {
@@ -130,42 +131,36 @@ function check_log_file() {
 
 #======checking 转发前检查
 function check_ssh_forwarding() {
-    #check ssh process 查找进程中是否已经存在指定的ssh转发进程
+    #check local ssh forwarding process 查找本地ssh转发进程状态
     local forwarding_process_info=$(ps -aux | grep $proxyPort:$localHost:$localPort | grep -v grep)
 
     #If the process already exists 如果转发进程已经存在
     if [[ -n $forwarding_process_info ]]; then
-        #check state of remote host forwarding port 检查远程主机上转发端口状态
-        # if [[ $(timeout 5 ssh -p $remotePort $remoteUser@$remoteHost "ss -tlpn |grep :$proxyPort") ]]; then
-        #     #proxy服务器上ssh进程状态正常 退出
-        # echo "Good! sshproxy is running." >>$log
-        # exit 0
-        # else
-        #get ssh forwarding process PID 获取转发进程到PID
-        #proxy服务器上ssh进程未检查到 或者链接到proxy服务器超时 终止本地到转发进程
-        # kill -9 $forwarding_pid
-        # fi
-        #半夜两点断开进程重新连接
+        local forwarding_pid=$(echo $forwarding_process_info | awk '{print $2}')
+
+        #半夜两点终止本地ssh转发进程 以重新连接
         if [[ $(date +%H) -eq 2 ]]; then
-            local forwarding_pid=$(echo $forwarding_process_info | awk '{print $2}')
             kill -9 $forwarding_pid
-            echo "restart ssh proxy"
-        else
-            echo "Good! sshproxy is running." >>$log
-            exit 0
+            echo "It will restart ssh proxy."
+            return 0
         fi
+
+        #check remote host sshd port 检查远程主机sshd端口 nc获取端口信息 返回值中含有ssh字样
+        # $(timeout $check_timeout nc $remoteHost $remotePort | grep -i ssh)
+        #  
+        if [[ $(timeout $check_timeout ssh -p $remotePort $remoteUser@$remoteHost "ss -tlpn4 |grep :$proxyPort") ]]; then
+            echo "ssh forwarding status is OK." >>$log
+            exit 0  #本地转发进程存在，远程ssh端口测试连接正常，退出
+        fi
+
+        echo "Can not connect sshd port $remotePort on $remoteHost, because network problem or $remotePort on $remoteHost is not a sshd port." >>$log
+        kill -9 $forwarding_pid
+        echo "local ssh forwarding process has been killed ,it will restart ssh proxy again."
     fi
 }
 
 #=====Remote Port Forward======远程主机转发
 function ssh_remote_forwarding() {
-    # #check remote host sshd port 检查远程主机sshd端口 nc获取端口信息 返回值中含有ssh字样
-    # if [[ ! $(timeout 5 nc $remoteHost $remoteHost | grep -i ssh) ]]; then
-    #     echo "Can not connect sshd port $remotePort on $remoteHost, or $remoteHost:$remotePort is not a sshd port." >>$log
-    #     kill -9 $forwarding_pid
-    #     exit 1
-    # fi
-
     echo "---start ssh proxy---" >>$log
     local errlog=$(mktemp)
     ssh -gfCNTR $proxyPort:$localHost:$localPort $remoteUser@$remoteHost -i $private_key -p $remotePort $options 1>>$log 2>$errlog
@@ -185,18 +180,18 @@ function ssh_remote_forwarding() {
     #saved proxy info and copy to the remote host
     ssh -p $remotePort $remoteUser@$remoteHost "mkdir -p $info_file_dir_on_remoteHost"
 
-    echo "=== generate at $(date) ===
-        +++++ target server info +++++
-          About:$localhost_comment
-        ---------------------
-          os-info:$(uname -a)
-          ssh-port:$localPort
-          ssh-user:$localUser
-          proxy-port:$proxyPort
-        ++++++info end+++
-        SSH Remote Forwarding:
-          target-host <-- remote forwarding --> $remoteHost
-          " >/tmp/$ssh_proxy_info_file
+    echo "=== Generate @ $(date) ===
++++++ target server info +++++
+about:$localhost_comment
+os:$(uname -a)
+hostname:$HOSTNAME
+ssh-user:$localUser
+ssh-port:$localPort
+---------------------
+$hostname:$localPort <--> $remoteHost:$proxyPort
+---------------------
+ssh -p $proxyPort <user-at-target-host>@$remoteHost
+" >/tmp/$ssh_proxy_info_file
 
     scp -P $remotePort /tmp/$ssh_proxy_info_file $remoteUser@$remoteHost:~/$info_file_dir_on_remoteHost/ >/dev/null
 }

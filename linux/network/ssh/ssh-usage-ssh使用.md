@@ -2,6 +2,24 @@
 
 下文中，客户端即是用户使用的主机，目标主机或者远程主机位sshd服务器。
 
+# 常用参数
+
+- `-p`：指定要连接的远程主机的端口
+- `-4`或`6`：指定使用的IP协议版本
+- `-l`：指定用户
+- `-f`：成功连接ssh后将指令放入后台执行
+- `-C`：压缩所有数据
+- `-N`：不执行远程命令（不登录到服务器执行命令）
+- `-D`：动态端口转发
+- `-R`：远程端口转发
+- `-L`：本地端口转发
+- `-g`：如果在[多路复用](#端口复用)连接上使用[端口转发](#端口转发)，必须在主进程上指定此选项，以允许远程主机连接到建立的转发的端口。
+- `-t`：分配伪终端（可以用来执行任意的远程计算机上**基于屏幕的程序**）
+- `-T`：不分配TTY
+- `-A`：开启身份认证代理转发
+- `-q`：安静模式（不输出错误/警告）
+- `-v`：显示详细信息（可用于排错）
+
 # 配置文件
 
 - 服务端：一般是`/etc/ssh/sshd_config`
@@ -131,61 +149,7 @@ ssh user@target-host #从跳板机登录到最终目标主机
       ProxyCommand ssh jump -q -W %h:%p  #%h和%p表示jump中的hostname和port
   ```
 
-## 转发认证
 
-为了方便，一般我们会配置，客户端到跳板机的密钥认证，以及跳板机到目标主机的密钥认证（甚至使用同一套密钥）：
-
-> 客户端---ssh-keys--->跳板机
->
-> 跳板机---ssh-keys--->目标主机
-
-但在某些对安全性有较高要求的情况下，我们**不希望跳板机可以通过密钥认证登录到目标主机**（可能没有配置跳板机到目标主机的密钥认证，甚至为了安全关闭了目标主机的密码登录），而是**将客户端的公钥直接存放到目标服务器**。
-
-> 客户端：私钥<======>公钥：目标服务器
-
-为了实现使用客户端使用密钥登录的目标服务，可以使用转发密钥认证的方式实现。
-
-不过，如果**使用`J`跳跃登录无需使用认证转发功能**即可实现上诉密钥登录要求，跳板机仅作为一个流量转发者。
-
-实现认证转发的方法：
-
-- 配置`ForwardAgent yes`
-
-  在客户端的`/etc/ssh/ssh_config`或`~/.ssh/config`中配置`ForwardAgent yes`即可。
-
-- `-A` 参数
-
-  如未配置`ForwardAgent yes`，也可以使用`-A`参数，其作用是：
-
-  > 允许转发认证代理的连接
-
-  逐步跳跃登录的方式：
-
-  ```shell
-  #1. 从客户端登录到跳板机 并将密钥交给agent 以供跳板机使用
-  ssh -A user@jump-host
-  #2. 从跳板机登录到目标主机将使用来自客户端的密钥
-  ssh user@target-host
-  ```
-
-  分配伪终端`-t`登录的方式：
-
-  ```shell
-  ssh -t -A user@jump-host ssh -t user@target-host
-  ```
-
-## 连接复用
-
-在已经连接到某个服务器的情况下，再连接该服务器时将直接从先前的连接缓存中读取信息，加快连接速度，尤其是于网络不太稳定的场景下。
-
-在`/etc/ssh/ssh_config`或用户家目录的`~/.ssh/config`中添加：
-
-```shell
-ControlMaster auto
-ControlPath ~/.ssh/socket/%r@%h:%p #连接信息存储路径
-ControlPersist yes  #连接保持
-ControlPersist 1h  #连接保持时间
-```
 
 ## 远程命令
 
@@ -220,9 +184,148 @@ ssh -t <host> 'cd /tmp;bash'
 vim scp://user@host[:port]//path/to/file
 ```
 
+
+
+# 转发认证
+
+为了方便，一般我们会配置，客户端到跳板机的密钥认证，以及跳板机到目标主机的密钥认证（甚至使用同一套密钥）：
+
+> 客户端---ssh-keys--->跳板机
+>
+> 跳板机---ssh-keys--->目标主机
+
+但在某些对安全性有较高要求的情况下，我们**不希望跳板机可以通过密钥认证登录到目标主机**（可能没有配置跳板机到目标主机的密钥认证，甚至为了安全关闭了目标主机的密码登录），而是**将客户端的公钥直接存放到目标服务器**。
+
+> 客户端：私钥<======>公钥：目标服务器
+
+为了实现使用客户端使用密钥登录的目标服务，可以使用转发密钥认证的方式实现。
+
+不过，如果**使用`J`跳跃登录无需使用认证转发功能**即可实现上诉密钥登录要求，ssh文档中也提到该方式比`-A`代理转发更安全。
+
+实现认证转发的方法：
+
+- 配置`ForwardAgent yes`
+
+  在客户端的`/etc/ssh/ssh_config`或`~/.ssh/config`中配置`ForwardAgent yes`即可。
+
+- `-A` 参数
+
+  如未配置`ForwardAgent yes`，也可以使用`-A`参数，其作用是：
+
+  > 允许转发认证代理的连接
+
+  逐步跳跃登录的方式：
+
+  ```shell
+  #1. 从客户端登录到跳板机 并将密钥交给agent 以供跳板机使用
+  ssh -A user@jump-host
+  #2. 从跳板机登录到目标主机将使用来自客户端的密钥
+  ssh user@target-host
+  ```
+
+  分配伪终端`-t`登录的方式：
+
+  ```shell
+  ssh -t -A user@jump-host ssh -t user@target-host
+  ```
+
+# 端口复用
+
+SSH 守护进程通常监听 22 端口，但是许多公共热点会屏蔽非常规 HTTP/S 端口（分别是 80 和 443 端口）的流量，这样就屏蔽了 SSH 连接。最快的解决方法是让 `sshd` 额外监听白名单上的端口：
+
+```
+/etc/ssh/sshd_config
+Port 22
+Port 443
+```
+
+但是443端口很有可能已经被 HTTPS 服务占用，在这种情况下可以使用端口复用工具，比如 [sslh](https://www.archlinux.org/packages/?name=sslh)，它可以监听在一个被复用的端口上并转发相应的数据包给对应的服务。
+
+# 连接复用
+
+在已经连接到某个服务器的情况下，再连接该服务器时将直接从先前的连接缓存中读取信息，加快连接速度，尤其是于网络不太稳定的场景下。
+
+在`/etc/ssh/ssh_config`或用户家目录的`~/.ssh/config`中添加：
+
+```shell
+ControlMaster auto
+ControlPath ~/.ssh/socket/%r@%h:%p #连接信息存储路径
+ControlPersist yes  #连接保持
+ControlPersist 1h  #连接保持时间
+```
+
+# 保持连接
+
+## 存活保持
+
+默认情况下，连接的会话在空闲一段时间后会自动登出。
+
+为了保持会话，在长时间没有数据传输时客户端可以向服务器发送一个激活信号；与之对应，服务器也可以在一段时间没有收到客户端消息时定期向客户端发送一个激活信号。
+
+另外可开启`TCPKeepAlive`以发送TCP连接消息，其可检测到连接异常，以避免僵尸进程产生。
+
+可根据情况在服务端或客户端设置：
+
+- 服务端`/etc/ssh/sshd_config`中添加
+
+  ```shell
+  TCPKeepAlive yes  #可选 保持tcp连接
+  ClientAliveInterval 60 #如果设置为0 则表示不发送激活信息。
+  ClientAliveCountMax 5
+  ```
+
+  服务端每60s向连接的客户端传送信息，客户端连续5次无响应则自动关闭该连接。
+
+- 客户端`/etc/ssh/ssh_config`或用户家目录的`~/.ssh/config`中添加
+
+  ```shell
+  TCPKeepAlive yes  #可选 保持tcp连接
+  ServerAliveInterval 60
+  ServerAliveCountMax 5
+  ```
+
+  每60s向连接的服务端端传送信息，服务端连续5次无响应则自动关闭该连接。
+
+也可以在ssh命令中使用`-o`参数指定向服务端发送激活信息间隔时间：
+
+```shell
+ssh -o ServerAliveInterval=60 user@host
+```
+
+## autossh工具
+
+autossh可以在监测ssh连接状态，当ssh断开后会自动重新发起连接。
+
+在ssh命令前使用`autossh -M <port>`即可，其指定一个端口，用以持续监听当前ssh连接状态。
+
+```shell
+autossh -M 2333 ssh -fCNR 8080:localhost:80 user@remote-host
+```
+
+一个autossh的systemd units文件示例，可放置于`/etc/systemd/system/autossh.service`或`$HOME/.config/systemd/user/`下。
+
+```shell
+[Unit]
+Description=Keeps a tunnel to 'example.com' open
+After=network.target
+
+[Service]
+User=autossh
+ExecStart=/usr/bin/autossh -M 5678 -o "ServerAliveInterval 60" -o "ServerAliveCountMax 3" -NR 1234:localhost:22 -i /home/autossh/.ssh/id_rsa someone@remote-host
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+```
+
 # 端口转发
 
+通过ssh将一个端口的请求转发到另一个端口上。ssh端口转发另一个名字是“ssh隧道”：
+
 > 隧道是一种把一种网络协议封装进另外一种网络协议进行传输的技术。
+
+ssh端口转发相关：
 
 - 使用1024以下的端口需要root权限。
 
@@ -238,9 +341,9 @@ vim scp://user@host[:port]//path/to/file
 
   **动态转发是正向代理，本地/远程转发是反向代理。**
 
-  **”正向(代理)“ 代理客户端**：正向代理代表客户端向服务器发送请求，使真实客户端对服务器不可见。
+  **”正向(代理)“ 代理客户端**：正向代理代表客户端向服务器发送请求，隐匿客户端。
 
-  **”反向(代理)“ 代理服务端**：反向代理代表服务器为客户端提供服务，使真实服务器对客户端不可见。
+  **”反向(代理)“ 代理服务端**：反向代理代表服务器为客户端提供服务，隐匿服务端。
 
 ## X转发
 
@@ -369,69 +472,6 @@ ssh -gfNCL *:9500:localhost:5900 user@remote
 
 假如位于NAT后的本地主机运行了xvnc（监听于5900端口），远程主机remote为公网主机，经过以上转发后，使用vnc客户端访问`remote:9500`即可连接上本地主机的vnc服务。
 
-# 保持连接
-
-## alive存活保持
-
-默认情况下，连接的会话在空闲一段时间后会自动登出。为了保持会话，在长时间没有数据传输时客户端可以向服务器发送一个激活信号；与之对应，服务器也可以在一段时间没有收到客户端消息时定期向客户端发送一个激活信号。
-
-另外可开启`TCPKeepAlive`以发送TCP连接消息，其可检测到连接异常，以避免僵尸进程产生。
-
-可根据情况在服务端或客户端设置：
-
-- 服务端`/etc/ssh/sshd_config`中添加
-
-  ```shell
-  TCPKeepAlive yes  #可选 保持tcp连接
-  ClientAliveInterval 60 #如果设置为0 则表示不发送激活信息。
-  ClientAliveCountMax 5
-  ```
-
-  服务端每60s向连接的客户端传送信息，客户端连续5次无响应则自动关闭该连接。
-
-- 客户端`/etc/ssh/ssh_config`或用户家目录的`~/.ssh/config`中添加
-
-  ```shell
-  TCPKeepAlive yes  #可选 保持tcp连接
-  ServerAliveInterval 60
-  ServerAliveCountMax 5
-  ```
-
-  每60s向连接的服务端端传送信息，服务端连续5次无响应则自动关闭该连接。
-
-也可以在ssh命令中使用`-o`参数指定向服务端发送激活信息间隔时间：
-
-```shell
-ssh -o ServerAliveInterval=60 user@host
-```
-
-## autossh工具
-
-autossh可以在监测ssh连接状态，当ssh断开后会自动重新发起连接。
-
-在ssh命令前使用`autossh -M <port>`即可，其指定一个端口，用以持续监听当前ssh连接状态。
-
-```shell
-autossh -M 2333 ssh -fCNR 8080:localhost:80 user@remote-host
-```
-
-一个autossh的systemd units文件示例，可放置于`/etc/systemd/system/autossh.service`或`$HOME/.config/systemd/user/`下。
-
-```shell
-[Unit]
-Description=Keeps a tunnel to 'example.com' open
-After=network.target
-
-[Service]
-User=autossh
-ExecStart=/usr/bin/autossh -M 5678 -o "ServerAliveInterval 60" -o "ServerAliveCountMax 3" -NR 1234:localhost:22 -i /home/autossh/.ssh/id_rsa someone@remote-host
-Restart=on-failure
-RestartSec=5s
-
-[Install]
-WantedBy=multi-user.target
-```
-
 # 文件传输
 
 ## scp远程复制
@@ -445,14 +485,16 @@ scp user@host:</path/to/file> </path/to/local-file>  #远程到本地
 
 注意：scp遇到软连接时，**会复制软连接的源文件**！可以打包要复制的文件，待scp复制到目标主机后再解包，或者换用其他工具如rsync。
 
+scp选项不能在命令最后指定，例如`scp test hostA:~/ -r`中将`-r`置于后方，其将不生效。
+
 常用选项：
 
-- -P  指定远程主机的端口号
-- -C  使用压缩
-- -r  递归方式复制（即复制文件夹下所有内容）
-- -p  保留文件的权限、修改时间、最后访问时间
-- -q  静默模式（不显示复制进度）
-- -F  指定配置文件
+- `-P`  指定远程主机的端口号
+- `-C`  使用压缩
+- `-r`  递归方式复制（即复制文件夹下所有内容）
+- `-p`  保留文件的权限、修改时间、最后访问时间
+- `-q`  静默模式（不显示复制进度）
+- `-F`  指定配置文件
 
 示例——复制本地ssh公钥到远程主机：
 
@@ -467,7 +509,9 @@ scp -P 999 ~/.ssh/id_rsa.pub root@ip:/root.ssh/authorized_keys
 
 使用sftp协议可以同ssh服务器进行文件传输，访问地址类似：
 
-> sftp://192.168.1.100:22/home/<user>/path/to/file
+```shell
+sftp://192.168.1.100:22/home/<user>/path/to/file
+```
 
 ## sshfs文件系统
 
@@ -606,24 +650,6 @@ user@host:/remote/folder /mount/point  fuse.sshfs noauto,x-systemd.automount,_ne
        `sense`取值：黑名单值为`deny`，白名单值为`allow`。
 
     2. 在`/etc/ssh/denyhosts`中添加黑名单/白名单用户，一行一个用户名。
-
-----
-
-# 常用参数
-
-- `p`：指定要连接的远程主机的端口
-- `f`：成功连接ssh后将指令放入后台执行
-- `C`：压缩所有数据
-- `N`：不执行远程命令（不登录到服务器执行命令）
-- `D`：动态端口转发
-- `R`：远程端口转发
-- `L`：本地端口转发
-- `g`：（配合端口转发）允许远程主机连接到建立的转发的端口（不使用该参数则只允许本地主机建立连接）
-- `t`：分配伪终端（可以用来执行任意的远程计算机上**基于屏幕的程序**）
-- `T`：不分配TTY
-- `A`：开启身份认证代理转发
-- `q`：安静模式（不输出错误/警告）
-- `v`：显示详细信息（可用于排错）
 
 # 问题解决
 
