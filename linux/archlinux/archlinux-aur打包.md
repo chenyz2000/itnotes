@@ -12,15 +12,61 @@ ArchLinux aur打包简易指南
 
 `/usr/share/pacman/`亦有PKGBUILD模板，可选择一份，将其更名为PKGBUILD，根据情况编辑PKGBUILD内容。
 
+示例：
+
+```shell
+# Maintainer: levinit
+# Co-Maintainer: robertfoster
+
+pkgname=edk2-avmf
+pkgver=20200801
+pkgrel=2
+fedora_ver=34
+pkgdesc="QEMU ARM/AARCH64 Virtual Machine Firmware (Tianocore UEFI firmware)."
+arch=('any')  #x86_84
+url="https://fedoraproject.org/wiki/Using_UEFI_with_QEMU"
+license=('BSD') #GPL-3 | custom | Apache
+#optional deps
+optdepends=(
+  "qemu: To make use of edk2 ovmf firmware"
+  "qemu-arch-extra: QEMU for foreign architectures"
+  "virt-manager: Desktop user interface for managing virtual machines"
+)
+#deps
+#depends=()
+#source contains files' urls
+source=(
+  "https://download-ib01.fedoraproject.org/pub/fedora/linux/development/rawhide/Everything/aarch64/os/Packages/e/edk2-aarch64-${pkgver}stable-${pkgrel}.fc${fedora_ver}.noarch.rpm"
+  "https://download-ib01.fedoraproject.org/pub/fedora/linux/development/rawhide/Everything/aarch64/os/Packages/e/edk2-arm-${pkgver}stable-${pkgrel}.fc${fedora_ver}.noarch.rpm")
+#files sha256sum
+sha256sums=('0da4f919cdaede39119ff2ee98888d8e2d7723d18920250b5e3ecb7822913bb4'
+            '2189bc4833fbb2f93e4e08c8602483d79f46f3bb08749e1a0610e4ed236ba5f9')
+#postinstall script
+install=${pkgname}.install
+#how to install and hanle this pkg
+package() {
+  cd "${srcdir}"/usr/share/AAVMF
+  ln -sf ../edk2/arm/vars-template-pflash.raw AAVMF32_VARS.fd
+  cd "${srcdir}"
+  cp -av usr "${pkgdir}"
+}
+```
+
 
 
 # mkepkg配置文件（可选）
 
-> `/etc/makepkg.conf` 是 makepkg 的主配置文件。用户的自定义配置位于 `$XDG_CONFIG_HOME/pacman/makepkg.conf` 或 `~/.makepkg.conf`。
+> `/etc/makepkg.conf` 是 makepkg 的主配置文件。
+>
+> 用户的自定义配置位于 `$XDG_CONFIG_HOME/pacman/makepkg.conf` 或 `~/.makepkg.conf`。
 
-- 打包人信息：找到`#PACKAGER="John Doe <john@doe.com>"`一行，去掉注释符号`#`（下同），修改`“John Doe <john@doe.com>”`为当前打包人信息。
+- 打包人信息
 
-- 包输出：`makepkg` 默认会在工作目录创建软件包，并把源代码下载到 `src/` 目录。
+  找到`#PACKAGER="John Doe <john@doe.com>"`一行，去掉注释符号`#`（下同），修改`“John Doe <john@doe.com>”`为你的相关信息。
+
+- 打包后的文件的输出位置
+
+  `makepkg` 默认会在工作目录创建软件包，并把源代码下载到 `src/` 目录。
 
   可根据需要修改起默认位置，找到一下内容进行相关修改：
 
@@ -28,9 +74,13 @@ ArchLinux aur打包简易指南
   - `#SRCDEST` 设置打包的源数据的路径
   - `SRCPKGDEST` 设置产生的源码包（可用`makdepkg -s`生成）的路径
 
-- 使用tmpfs：编译过程需要大量的读写操作，要处理很多小文件。
+- 打包临时目录
 
-  将工作目录移动到 [tmpfs](https://wiki.archlinux.org/index.php/Tmpfs) 可以减少编译时间。找到`#BUILDDIR=/tmp/makepkg`去掉`#`，修改为`BUILDDIR=/tmp/makepkg makepkg`。
+  找到`#BUILDDIR=/tmp/makepkg`去掉`#`，修改为目标目录。
+  
+  编译过程需要大量的读写操作，，将工作目录移动到 [tmpfs](https://wiki.archlinux.org/index.php/Tmpfs) 减少编译时间，例如`/tmp/makepkg`：
+  
+  `BUILDDIR=/tmp/makepkg makepkg`。
 
 其余参考[archwiki-makepkg](https://wiki.archlinux.org/index.php/Makepkg_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)#.E9.85.8D.E7.BD.AE)
 
@@ -40,16 +90,16 @@ ArchLinux aur打包简易指南
 在PKGBUILD文件目录下执行构建软件包的命令：
 
 ```bash
-makepkg    #makepkg -f 可覆盖构建
-pacman -U pkgname    #安装软件包
-#makepkg -i  #相当于执行以上两步命令
+makepkg            #makepkg -f 可覆盖构建
+pacman -U pkgname  #安装软件包
+#makepkg -i        #相当于执行以上两步命令
 ```
 
 如果因为依赖不满足而构建失败，可先检查其依赖情况：
 
 ```shell
 namcap <pkgname>  #检测依赖情况 pkgname是软件包的名字
-makepkg -s  # 可自动安装依赖
+makepkg -s        #可自动安装依赖
 #makepkg -S <lib-pkgname >  #手动安装依赖的软件包
 ```
 
@@ -63,7 +113,7 @@ makepkg -s  # 可自动安装依赖
 
   ```shell
   ssh-keygen
-  ssh-keygen  -t  rsa    #或者-t指定加密类型如rsa、dsa
+  ssh-keygen  -t  rsa   #或者-t指定加密类型如rsa、dsa
   ```
 
 - 仓库连接
@@ -103,7 +153,7 @@ makepkg -s  # 可自动安装依赖
 
 - 生成信息并上传
 
-  注意：**原则上aur中只提供PKGBUILD文件和.SRCINFO文件，软件包相关资源应在PKGBUILD的source中提供URI，而不是上传到aur的git服务器。**
+  注意：**原则上aur中只提供PKGBUILD文件和.SRCINFO文件，软件包相关资源应在PKGBUILD的source中提供URL，而不是上传到aur的git服务器。**
 
   ```shell
   updpkgsums     #生成校验码 如果不使用校验，跳过该步骤

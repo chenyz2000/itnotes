@@ -127,7 +127,7 @@ if [[ $os == Linux ]]; then
     #upgrade need yay
     alias upgrade='yay && pkgclean -rk 2 && orphan'
     #makepkg aur
-    alias aurinfo='makepkg --printsrcinfo > .SRCINFO ; git status'
+    alias aurinfo='updpkgsums && makepkg --printsrcinfo > .SRCINFO ; git status'
 
   elif [[ $(which apt 2>/dev/null) ]]; then
     alias apt='sudo apt'
@@ -157,8 +157,8 @@ elif [[ $os == Darwin ]]; then
   export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles
 #  export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.aliyun.com/homebrew/homebrew-bottles
 
-  alias update='brew update && echo ---outdated---  && brew outdated'
-  alias upgrade='brew upgrade --cask && brew upgrade'
+  alias update='brew update -v && echo ---outdated---  && brew outdated'
+  alias upgrade='brew upgrade --cask -v && brew upgrade -v'
   alias pkgclean='brew cleanup'
   alias finderplugin='brew cask install qlcolorcode qlstephen qlmarkdown quicklook-json qlimagesize quicklookase qlvideo webpquicklook'
   #suspicious-package suspicious-package quicklook-pat provisionql

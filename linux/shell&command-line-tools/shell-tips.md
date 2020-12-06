@@ -31,9 +31,41 @@ gnome-terminal -- python
   echo $(. /etc/os-release;echo $NAME)
   ```
 
-- `$MACHTYPE`  架构及操作系统等信息（例如输出x86_64-pc-linux-gnu）
+- `EDITOR`  默认编辑器（某些软件会调用例如git commit或crontab -e时）
 
-- `$EDITOR`  默认编辑器（某些软件会调用例如git commit时）
+  ```shell
+  export EDITOR=vim
+  ```
+
+- 获知当前系统架构
+
+  ```shell
+  echo $MACHTYPE
+  uname -m
+  ```
+
+- 获知当前shell
+
+  ```shell
+  echo $SHELL
+  echo $0
+  ```
+
+- 搜索某个命令的手册描述（数据来自mandb） `apropos <command>`
+
+- 一般能用以下方式获取某个命令相关信息：
+
+  ```shell
+  info <command> 
+  man <command>
+  <command> --help
+  <command> -h
+  <command> help
+  ```
+
+  二者有交集。info 工具可显示比man更完整的GNU工具信息。man没有内建与外部命令的区分。
+
+  
 
 # 判断命令是否可用
 
@@ -51,8 +83,6 @@ gnome-terminal -- python
 # shell脚本相关
 
 - `sh`中没有`source`
-
-- `$SHELL`  当前shell名称
 
 - shell文件格式化工具`shfmt`
 
@@ -109,14 +139,25 @@ seq -w 99 101  #倒序生成数字
 
 - `id $USER`  用户的uid和gid信息
 
-- `$HOME` 用户家目录 
+- `getent`  从管理数据库取得条目（参看`getent --help`）
 
   ```shell
-  grep ^$USER: /etc/passwd |cut -d ":" -f 6  #or $(whomai)
-  getent passwd | grep ^$USER: |cut -d ":" -f 6  #or $(whomai)
+  getent passwd <username>
   ```
 
-- `getent`  从管理数据库取得条目（参看`getent --help`）
+- 用户家目录 
+
+  - `$HOME` 变量获取当前用户家目录
+
+  - 获取任意用户家目录
+
+    ```shell
+    username=root  #当前用户whomai 或者 $USER
+    grep ^$username: /etc/passwd |cut -d ":" -f 6
+    getent passwd | grep ^$username: |cut -d ":" -f 6
+    ```
+
+    
 
 - 修改密码（非交互式）
 
@@ -230,6 +271,7 @@ seq -w 99 101  #倒序生成数字
 - 全局变量`COLUMNS`和`LINES`
 - `tput cols`和`tput lines`
 - `stty size`  (输出两个数字，以空格分开，前面为行数--高，后面为列数-宽）
+- `stty ek` 重置终端按键映射
 
 # 未归类
 

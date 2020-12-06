@@ -45,7 +45,7 @@ re dhat/centos安装`tigervnc-server tigervnc-server-module`
 
 - 启动会话
 
-  最简单方法是执行`vncserver`，它是`Xvnc`的包装脚本（`Xvnc`命令使用通`x0vncserver`）。
+  最简单方法是执行`vncserver`，它是`Xvnc`的包装脚本（`Xvnc`命令使用和`x0vncserver`类似）。
 
   用户首次执行该命令，会提示创建适用于该用户vnc会话的密码。
 
@@ -153,7 +153,7 @@ x11vnc -gui  #可以启动一个tk编写的图形界面前端
 
 **如果默认情况下连接vncserver后符合需求，无需更改相关配置文件。**
 
-用户的vnc配置文件再`~/.vnc`目录下，主要是`config`和`xstarup`。
+用户的vnc配置文件再`~/.vnc`目录下，主要是`config`和`xstarup`。（也有配置文件为是`~/.vnc/vncserver-config-defaults`的）
 
 一般首次执行vncserver相关命令会创建`~/.vnc`目录并生成这两个文件。
 
@@ -166,9 +166,15 @@ x11vnc -gui  #可以启动一个tk编写的图形界面前端
 ```shell
 # desktop=sandbox
 geometry=1920x1080  #分辨率
-# localhost
+# localhost  #仅监听本地端口
 # alwaysshared
 dpi=96
+```
+
+该文件中的参数也可以在`Xvnc`和`vncserver`中直接指定，如：
+
+```shell
+vncserver -dpi 96 -geometry=1600x960
 ```
 
 
@@ -212,6 +218,38 @@ fi
 #exec $session
 exec dbus-launch $session
 ```
+
+
+
+# vnc安全
+
+在互联网中开启vnc相对不安全，需要考虑明文密码及客户端与服务端之间未加密通信的问题。可以借助ssh隧道对vnc通信加密以提升安全性。
+
+1. 如果在vnc的config文件中启用了`localhost`选项（默认注释），则其vnc会话仅监听localhost。
+
+   也可以启用`vncserver`时，使用`-localhost`参数，若`vncserver`命令对`-localhost`参数不支持，该用`Xvnc`
+
+   ```shell
+   vncserver -localhost :1
+   #或者
+   Xvnc -localhost :1
+   ```
+
+   。*
+
+2. 对vnc会话端口使用ssh端口转发（即ssh隧道）加密
+
+   这里示例使用本地转发将vnc会话的5901端口转发到5601端口
+
+   ```shell
+   ssh -fCNL *:5601:localhost:5901 <user>@localhost
+   ```
+
+3. 访问ssh转发的端口
+
+   以上文为例，应该访问vnc服务器的5601端口。
+
+
 
 
 
