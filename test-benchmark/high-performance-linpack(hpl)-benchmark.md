@@ -150,13 +150,11 @@ cp setup/Make.UNKOWN ./Make.aarch64
    ```
 
    提示：`Make.UNKOWN`修改后的`<arch>`名字其实也是随意的，只是方便区分而已。
-
    
-
    
 
    `Make.<arch>`文件中重要配置行的说明：
-   
+
    - ARCH:  必须与文件名 `Make.<arch>`中的`<arch>`一致
 
    - TOPdir: 指明 hpl 程序所在的目录
@@ -168,24 +166,26 @@ cp setup/Make.UNKOWN ./Make.aarch64
    - LAdir:  BLAS 库或 VSIPL 库所在的目录
 
    - LAinc、LAlib: BLAS 库或 VSIPL 库头文件、库文件
-
+   
    - HPL_OPTS: 包含采用什么库、是否打印详细的时间、L广播参数等，若
-
+   
      - 采用 FLBAS 库则置为空
-  - 采用 CBLAS 库为`-DHPL_CALL_CBLAS`
+     - 采用 CBLAS 库为`-DHPL_CALL_CBLAS`
      - 采用 VSIPL  为`-DHPL_CALL_VSIPL`
-
-     `-DHPL_DETAILED_TIMING`为打印每一步所需的时间，默认不打印
-
-     `-DHPL_COPY_L`为在  L 广播之前拷贝 L，默认不拷贝
+     
+   - `-DHPL_DETAILED_TIMING`为打印每一步所需的时间，默认不打印
+   
+   - -DHPL_COPY_L`为在  L 广播之前拷贝 L，默认不拷贝
    
    - CC:  C 语言编译器
    
-- CCFLAGS: C 编译选项
-  
-- LINKER: Fortran 77 编译器
-  
-- LINKFLAGS: Fortran 77 编译选项(Fortran 77 语言只有在采用 Fortran 库时才需要)
+   - CCFLAGS: C 编译选项
+   
+   - LINKER: Fortran 77 编译器
+   
+   - LINKFLAGS: Fortran 77 编译选项(Fortran 77 语言只有在采用 Fortran 库时才需要)
+   
+     
 
 2. 编译安装
 
@@ -362,7 +362,6 @@ intel安装目录下的`mkl/benchmarks`的`linpack`及`mplinpack`测试工具，
   ./xlinpack_xeon64 lin.input  #指定lin.input为输入文件
   ```
 
-  
 
 
 
