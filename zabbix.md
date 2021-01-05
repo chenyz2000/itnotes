@@ -61,7 +61,7 @@
       编辑`/etc/zabbix/zabbix_server.conf`，根据情况修改如下内容：
 
       ```shell
-      DBHost=localhost #默认值
+      #DBHost=localhost #默认值
       DBName=zabbix
       DBUser=zabbix
       DBPassword=<password>  #如果数据库在本机 设置了本地访问免密码则无需配置

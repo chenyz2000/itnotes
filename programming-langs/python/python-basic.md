@@ -379,6 +379,10 @@ isinstance(a,int)    #True
   >
   > [item_exp_result for item in list if condition]
 
+  *内置函数`filter(function,iterable)`方式等效于列表推导式，一般列表推导式速度更快。*
+
+  
+
   前面的item_exp_result是列表生成元素表达式，可以是有返回值的函数。
 
   ```python
@@ -404,7 +408,7 @@ isinstance(a,int)    #True
 
 - 集合(`set`)推导式
 
-
+  用法参考列表和字典推导式。
 
 # 变量和运算符
 

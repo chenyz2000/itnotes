@@ -78,7 +78,16 @@ gnome-terminal -- python
 - `type 2>/dev/null`
 - `hash ssh 2>/dev/null`
 
+# 字符串处理
 
+- 去掉前后的空格
+
+  ```shell
+  eval echo "xxx xx"
+  eval echo $(echo 'ab c')
+  ```
+
+  
 
 # shell脚本相关
 
@@ -100,7 +109,7 @@ gnome-terminal -- python
 
     某行执行后返回值不为0自行退出，避免继续执行其后的代码，例如某行执行的命令书写错误而执行失败。
 
-## seq序列化输出
+# seq序列化输出
 
 seq命令产生从某个数到另外一个数之间的所有整数。
 

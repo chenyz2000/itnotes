@@ -183,7 +183,7 @@ Debian安装`nis`和`yp-tools`，启用`nis`和`ypbind`。
 redhat/centos上，推荐使用`setup`或` authconfig-tui`（需要`python`）或` authconfig-gtk`（需要安装gtk相关的图形界面工具）完成下列各项的配置，或者使用authconfig命令配置：
 
 ```shell
-authconfig --enablenis --nisdomainname=<domain name> --nisserver=<nis server> --update
+authconfig --enablenis --nisdomain=<domain name> --nisserver=<nis server> --update
 ```
 
 或者按照以下步骤进行以下配置：

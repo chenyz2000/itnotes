@@ -213,7 +213,7 @@ watch -d "chronyc clients"
 
 安装`ntp`包并启用`ntpd`服务。
 
-配置`/etc/ntpd.conf`示例：
+配置`/etc/ntp.conf`示例：
 
 ```shell
 #同步时间的服务器

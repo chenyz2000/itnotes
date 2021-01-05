@@ -1,3 +1,5 @@
+# 基本使用
+
 - 创建会话
 
   ```shell
@@ -11,6 +13,12 @@
 
 - 将当前会话放入后台 <kbd>Ctrl</kbd><kbd>b</kbd>  <kbd>d</kbd> 
 
+- 列出所有会话
+
+  ```shell
+  tmux ls
+  ```
+
 - 关闭会话
 
   从会话中退出即会关闭会话。
@@ -22,6 +30,17 @@
   tmux kill-session -t <session-name>  #关闭指定会话
   tmux kill-server  #关闭所有会话
   ```
+
+# 常用快捷键
+
+前缀 <kbd>Ctrl</kbd><kbd>b</kbd> 
+
+- w 窗口
+- s 会话
+
+
+
+# 非交互式操作
 
 - 创建会话 放入后台 并向其发送要执行的指令
 

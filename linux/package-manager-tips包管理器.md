@@ -2,7 +2,31 @@
 
 涉及到安装卸载锁定的操作一般需要root或sudo
 
+# 禁止自动更新
 
+```shell
+systemctl disable --now packagekit
+systemctl mask packagekit  #注销unit
+```
+
+恢复
+
+```shell
+systemctl unmask packagekit #恢复unit
+systemctl enable --now packagekit
+```
+
+
+
+如果进行该服务后在 Debian类系统中执行`apt-get`产生类似错误：
+
+> Error: GDBus.Error:org.freedesktop.systemd1.UnitMasked: Unit packagekit.service is masked.
+
+是由`/etc/apt/apt.conf.d/20packagekit`导致的。因为在安装命令完成之后，会出触发特定的 PackageKit 钩子，由于禁用了服务而导致该错误，所以禁用该配置即可：
+
+```
+mv /etc/apt/apt.conf.d/20packagekit{,.disabled}
+```
 
 # 命令或文件等软件包来源
 
@@ -84,12 +108,13 @@
 ## yum/dnf：yum-plugin-versionlock插件
 
 ```shell
-yum install yum-plugin-versionlock
+yum install -y yum-plugin-versionlock
 	
 yum versionlock add kernel  #锁定内核
 yum versionlock list             #查看已经锁定软件包
-yum versionlock delete '0:kernel-3.10.0-957.5.1.el7.*'  #解锁示例
-yum versionlock clear       #解锁所有
+
+#yum versionlock delete '0:kernel-3.10.0-957.5.1.el7.*'  #解锁示例
+#yum versionlock clear       #解锁所有
 ```
 
 
@@ -98,6 +123,7 @@ yum versionlock clear       #解锁所有
 
 ```shell
 apt-mark hold <PACKAGE_NAME>  #锁定软件版本 可以指定多个
+#apt-mark hold inux-image-4.15.0-38-generic
 apt-mark showhold             #显示锁定的软件包
 apt-mark unhold PACKAGE_NAME  #解锁 可以一次指定多个包。
 ```

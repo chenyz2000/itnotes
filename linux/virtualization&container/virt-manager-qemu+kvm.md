@@ -93,10 +93,11 @@ echo "options kvm_intel nested=1" > /etc/modprobe.d/kvm.conf
     #delete bridge network==
     # ip link set dev bridge_name down
     # brctl delbr bridge_name
-    ```
-
-    使用`iproute`创建网桥（`iproute2`，另使用Infiniband应该安装有`mlnx-iproute2`）
-
+    # nmcli con modify $bridge_name autoconnect yes ipv4.method manual ipv4.address $ip ipv4.gateway $gw
+  ```
+  
+  使用`iproute`创建网桥（`iproute2`，另使用Infiniband应该安装有`mlnx-iproute2`）
+  
     ```shell
     bridge_name=br0
     interface=enp59s0f3
@@ -125,10 +126,10 @@ echo "options kvm_intel nested=1" > /etc/modprobe.d/kvm.conf
     
     #修改名字
     #ip l set name <new name> <bridge_name>
-    ```
-
-    
-
+  ```
+  
+  
+  
   - ssh连接：`openbsd-netcat`
 
 ## qemu管理虚拟机

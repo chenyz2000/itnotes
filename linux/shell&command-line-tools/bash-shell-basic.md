@@ -78,6 +78,22 @@ echo $-
 > - `B`: 启用*Brace expansion*，使得shell可以展开`*`，`?`这些形式的命令。
 > - `H`: 启用*History substitution*，Bash的历史机制啦，`history`，`!`这些。
 
+
+
+## bash 配置文件
+
+|          文件           |                             描述                             | 登录 shell(见下) | 交互 shell非登录 |
+| :---------------------: | :----------------------------------------------------------: | :--------------: | :--------------: |
+|     `/etc/profile`      | [加载](https://wiki.archlinux.org/index.php/Help:Reading_(简体中文)#Source)全部储存在 `/etc/profile.d/*.sh` 和 `/etc/bash.bashrc` 中的配置。 |        是        |        否        |
+|    `~/.bash_profile`    | 针对每个用户，紧接 `/etc/profile` 执行。如果这个文件不存在，会顺序检查 `~/.bash_login` 和 `~/.profile` 文件。框架文件 `/etc/skel/.bash_profile` 同时会引用 `~/.bashrc`。 |        是        |        否        |
+|    `~/.bash_logout`     |              针对每个用户，退出登录 shell 后。               |        是        |        否        |
+| `/etc/bash.bash_logout` | 取决于 `-DSYS_BASH_LOGOUT="/etc/bash.bash_logout"` 编译标记。退出登录 shell 后。 |        是        |        否        |
+|   `/etc/bash.bashrc`    | 取决于编译标志 `-DSYS_BASHRC="/etc/bash.bashrc"`。加载 `/usr/share/bash-completion/bash_completion`配置。 |        否        |        是        |
+|       `~/.bashrc`       |         针对每个用户，在 `/etc/bash.bashrc` 后加载。         |                  |                  |
+
+- 如果以 `--login` 调用，登录 shell 可能不是交互式的。
+- `--noproflie`忽略任何配置文件，`--norc`忽略交互模式中用户个人的`.bashrc`配置文件。
+
 # 基础
 
 ## 基本特殊符号

@@ -15,8 +15,8 @@ logpath=''
 
 #log path
 
-bandtime=8640000 #默认秒s m h d w
-findtime=6000
+bandtime=360000 #默认秒s m h d w
+findtime=3600
 maxretry=5
 
 #-----

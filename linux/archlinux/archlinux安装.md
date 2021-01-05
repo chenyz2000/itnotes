@@ -442,12 +442,9 @@ linux自带的`linux-frimware`已经支持大多数驱动，如果某些设置�
     ```shell
     pacman -S efibootmgr  #使用esp还需安装
     ##如果单独划分了esp，将其挂载到/boot/efi，则--efi-directory=/boot/efi
-    grub-install --efi-directory=/boot --bootloader-id=grub
+    grub-install --efi-directory=/boot --bootloader-id=grubgru
     ```
-  ```
   
-  ```
-
  - 使用Legacy
 
      ```shell

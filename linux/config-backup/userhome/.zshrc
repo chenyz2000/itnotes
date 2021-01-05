@@ -81,7 +81,8 @@ if [[ $os == Linux ]]; then #iproute
 elif [[ $os == Darwin ]]; then #net-tools (ifconfig)
   export HOSTNAME=$HOST
   innerip=$(ifconfig | grep inet | grep -vE "inet6|127.0.0.1" | cut -d " " -f 2)
-  gateway=$(route get default | grep gateway | grep -oE '[0-9.]+')
+  gateway=$(netstat -rn | grep "default" | awk '{print $2}' |head -n 1)
+  # gateway=$(route -n get default | grep gateway | grep -oE '[0-9.]+')
 fi
 
 echo -e "+++ $(uname -rsnm) +++
