@@ -99,7 +99,7 @@ function backupconfigs() {
     [[ -f $config ]] || continue
 
     if [[ $config == .ssh/config ]]; then
-      cp -av $config ~/Documents/network/ssh/
+      cp -av $config ~/Documents/server-configs/ssh/config
     else
       cp -av ~/$config $path_for_bakcup/
     fi
@@ -159,7 +159,7 @@ elif [[ $os == Darwin ]]; then
 #  export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.aliyun.com/homebrew/homebrew-bottles
 
   alias update='brew update -v && echo ---outdated---  && brew outdated'
-  alias upgrade='brew upgrade --cask -v && brew upgrade -v'
+  alias upgrade='brew outdated && brew upgrade -v'
   alias pkgclean='brew cleanup'
   alias finderplugin='brew cask install qlcolorcode qlstephen qlmarkdown quicklook-json qlimagesize quicklookase qlvideo webpquicklook'
   #suspicious-package suspicious-package quicklook-pat provisionql
@@ -170,6 +170,7 @@ if [[ $os == Linux ]]; then
   alias trim='sudo fstrim -v /home && sudo fstrim -v /'
   # clear 2 weeks ago logs
   alias logclean='sudo journalctl --vacuum-time=1weeks'
+  alias systemctl='sudo systemctl'
 elif [[ $os == Darwin ]]; then
   #sudo gem install iStats
   alias tmquickly='sudo sysctl debug.lowpri_throttle_enabled=0'
@@ -306,5 +307,8 @@ alias condaclean='conda clean -ady'
 #-anaconda/miniconda
 #prevent auto active conda env, execute:
 #conda config --set auto_activate_base false
+
+#ansible
+#ANSIBLE_CONFIG=~/.ansible.cfg
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

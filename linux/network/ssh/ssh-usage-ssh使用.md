@@ -774,6 +774,23 @@ ssh命令中使用参数`-v`可输出详细的调试信息
   UseDNS no
   ```
   
+
+
+
+- shell配置文件问题（和ssh无关）
+
+  成功登录但是不出现命令提示符，一般是载入shell初始配置文件卡住，为执行`/etc/profile.d`或`~/.bashrc`等文件造成。使用以下方式绕过载入shell的初始配置文件，登录后排查解决：
+
+  ```shell
+  ssh user@server -t "bash --noprofile"
+  #或
+  ssh user@server -t "bash --norc"
+  ```
+
+  `--noprofile`不载入任何全局或个人初始配置文件，包括`/etc/profile` 、`~/.bash_profile`、`~/.bash_login`和`~/.profile`等。
+
+  `--norc`不载入个人初始配置文件`~/.bashrc`。
+
   
 
 ## 各种登录失败原因
