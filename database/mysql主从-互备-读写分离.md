@@ -1,10 +1,22 @@
-
-
----
-
 # 主从复制
 
 被同步复制的数据库，在主服务器可读写，在从服务器上只能读。
+
+工作原理：
+
+- 主节点
+
+  1. 每个从节点连接到主节点时，主节点都会创建一个对应的 binlog dump 的线程；
+  2. 主节点上进行 insert、update、delete 操作时，会按照时间先后顺序写入到 binlog 中；
+  3. 主节点的 binlog 发生变化，binlog dump 线程就会通知从节点 (Push模式)，并将相应的 binlog 内容发送给从节点。
+
+- 从节点
+
+  当开启主从同步的时候，从节点会创建两个线程用来完成数据同步的工作。
+
+- **I/O线程：** 此线程连接到主节点，主节点上的 binlog dump 线程会将 binlog 的内容发送给此线程。此线程接收到 binlog 内容后，再将内容写入到本地的 relay log。
+
+- **SQL线程：** 该线程读取 I/O 线程写入的 relay log，并且根据 relay log 的内容对从数据库做对应的操作。
 
 
 
@@ -21,11 +33,15 @@ flush privileges;
 
 停止所有主机mysql相关服务
 
+
+
 ## 主服务器配置
 
 在主服务器操作。
 
-1. 添加或数据库的cnf配置文件（例如添加一个配置文件`/etc/my.cnf.d/master-server.cnf`）
+1. 添加或编辑数据库的cnf配置文件
+
+   例如添加一个配置文件`/etc/my.cnf.d/master-server.cnf`：
 
    ```ini
    [mysqld]
@@ -36,7 +52,7 @@ flush privileges;
    #日志格式：statement 保存SQL语句（默认） row 保存影响记录数据 mixed 前面两种的结合
    binlog_format = mixed
    log_bin=mysql-bin #开启二进制日志
-   expire_logs_days = 9  #bin日志保留时间
+   expire_logs_days = 90  #bin日志保留时间 
    sync_binlog = 5  # binlog的写入频率  该参数性能消耗很大，但可减小MySQL崩溃造成的损失
    
    ##同步数据库配置
@@ -78,28 +94,27 @@ flush privileges;
 
       **也可以直接打包压缩主服务器上的数据库文件夹，发送到从服务器，在相应位置解开。**
 
-      1. 主服务器上导出
+      1. 主服务器上导出（假设用户吗是dbuser，密码是userpwd）
 
          ```shell
-         #假设数用户为xx1密码yy1，数据库名DB1
-         mysqldump -u xx1 --password=yyy DB1 > backup.sql
+         mysqldump -u dbuser --password=userpwd DB1 > backup.sql
          ```
-
-      2. 传送导出文件到从服务器，在从服务器上创建同名数据库：
-
-         ```sql
+         
+   2. 传送导出文件到从服务器，在从服务器上创建同名数据库：
+      
+      ```sql
          CREATE DATABASE DB1;
          ```
-
-      3. 在从服务器上导入数据库：
-
-         ```shell
-         mysql -u xx2 --password=yys DB1 < backup.sql
+      
+   3. 在从服务器上导入数据库：
+      
+      ```shell
+         mysql -u dbuser --password=userpwd DB1 < backup.sql
          ```
-
-      4. ！！！**配置完从服务器并启动同步后，再解锁主服务器上已锁定的数据表**
-
-         ```sql
+      
+   4. ！！！**配置完从服务器并启动同步后，再解锁主服务器上已锁定的数据表**
+      
+      ```sql
          UNLOCK TABLES;
          ```
 
@@ -191,7 +206,7 @@ show slave status\G;
       ```sql
       use test_db1;
       create table table1(id int(3),name char(10));
-      insert into table1 values(001,'哈哈哈哈');
+      insert into table1 values(001,'hello,db');
       ```
 
    2. 在从服务器上查看效果
@@ -203,7 +218,7 @@ show slave status\G;
 
 # 互为主从
 
-仍以前文[主从复制](#主从复制)中的示例，这里的没有单纯的`主`或`从`的角色，是既为主也为从，都能读写被同步的数据库，这种情况也有称为主主复制，双机/多机互备，可能还有多机中一部分互备而一部分仅作从服务器复杂组合情况。
+仍以前文[主从复制](#主从复制)中的示例，这里的没有单纯的`主`或`从`的角色，是既为主也为从，都能读写被同步的数据库，这种情况也有称为主主复制或双机/多机互备（主备），可能还有多机中一部分互备而一部分仅作从服务器复杂组合情况。
 
 可参看上文主从复制的相关操作（如创建专门的用户，导出导入已有数据库等），互相配置主从即可。
 
