@@ -93,13 +93,15 @@ echo -e "+++ $(uname -rsnm) +++
 configs_files=(.ssh/config .condarc .zshrc .gitignore_global .gitconfig .vimrc) #.bashrc  .makepkg.conf # .bash-powerline.sh)
 path_for_bakcup=~/Documents/it/itnotes/linux/config-backup/userhome
 
+ssh_backup_dir=$HOME/Documents/it/server-configs/ssh
+
 function backupconfigs() {
   cd $HOME
   for config in ${configs_files[*]}; do
     [[ -f $config ]] || continue
 
     if [[ $config == .ssh/config ]]; then
-      cp -av $config ~/Documents/server-configs/ssh/config
+      cp -av $config $ssh_backup_dir/
     else
       cp -av ~/$config $path_for_bakcup/
     fi
@@ -109,13 +111,12 @@ function backupconfigs() {
 function restoreconfigs() {
   for config in ${configs_files[*]}; do
     if [[ $config == .ssh/config ]]; then
-      cp -av ~/Documents/network/ssh/config ~/.ssh/config
+      cp -av $ssh_backup_dir/config ~/.ssh/config
     else
       cp -av $path_for_bakcup/$config ~/
     fi
   done
 }
-
 
 #===system commands===
 
@@ -125,8 +126,8 @@ if [[ $os == Linux ]]; then
     alias pacman='sudo pacman'
     alias orphan='sudo pacman -Rscn $(pacman -Qtdq)'
     alias pkgclean='sudo paccache -rk 2 2>/dev/null'
-    #upgrade need yay
-    alias upgrade='yay && pkgclean -rk 2 && orphan'
+    alias update='sudo pacman -Syy'
+    alias upgrade='yay || pkgclean -rk 2 && orphan'
     #makepkg aur
     alias aurinfo='updpkgsums && makepkg --printsrcinfo > .SRCINFO ; git status'
 
@@ -271,11 +272,11 @@ alias pip=pip3
 alias pipoutdated='pip list --outdated'
 alias pipupgrade='pip install --upgrade $(echo $(pip list --outdate|sed -n "3,$ p"|cut -d " " -f 1))'
 
-#-R
-if [[ $os == Darwin && -f /usr/local/bin/R ]]; then
-#R use openblas but mac provides BLAS
-#export LDFLAGS="-L/usr/local/opt/openblas/lib"
-#export CPPFLAGS="-I/usr/local/opt/openblas/include"
+#openblas
+if [[ $os == Darwin && -d /usr/local/opt/openblas ]]; then
+  export LDFLAGS="-L/usr/local/opt/openblas/lib"
+  export CPPFLAGS="-I/usr/local/opt/openblas/include"
+  export PKG_CONFIG_PATH="/usr/local/opt/openblas/lib/pkgconfig"
 fi
 
 #-Golang |only gopaht need set. default gopath is ~/go
@@ -284,7 +285,7 @@ gopath=/Users/levin/Library/golang
 [[ -d $gopath ]] && export GOPATH=$gopath
 
 #---macos PATH
-export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
+export PATH="/usr/local/sbin:$PATH"
 
 
 # >>> conda initialize >>>

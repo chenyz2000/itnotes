@@ -122,6 +122,18 @@ firewall-cmd --add-service=ntp --permanent
 firewall-cmd --reload
 ```
 
+NTP服务器常用：
+
+- Windows：`time.windows.com` 和 `time.nist.gov`
+
+- MacOS：`time.apple.com` 和 `time.asia.apple.com`
+
+- NTP授时服务器（中国区）：`cn.ntp.org.cn`
+
+  ```
+  ntpdate cn.ntp.org.cn
+  ```
+
 ## chrony
 
 安装`chrony`并启用`chronyd`服务

@@ -15,8 +15,6 @@ badmin reconfig
 
 
 
-
-
 # 资源限制
 
 资源管理配置文件`config/lsb.resources`，可调控用户在集群中可使用的资源配额。

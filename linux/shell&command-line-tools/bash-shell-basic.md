@@ -691,7 +691,7 @@ for j in "$@";do echo $j;done
 
 传入参数`'a b' c`：`$*`、`$@`依然输出a b c三行，`"$@"`输出`a b`和`c`两行，  `"$*"`将传入内容当作整体输出`a b c`一行。
 
-## 变量测试
+## 变量测试（变量置换）
 
 | 变量置换方式    | 变量y没有设置        | 变量y为空值时        | 变量y值不为空   |
 | --------------- | -------------------- | -------------------- | --------------- |
@@ -756,7 +756,30 @@ for j in "$@";do echo $j;done
   echo $(expr index $str ab)  #1
   ```
 
+- 字符串截取
 
+  ```shell
+  ${param:start:length}
+  str='hello'
+  echo "${test::5}"   #hello
+  echo "${test:0}"   #hello
+  echo "${test:0:}"   #hello
+  ```
+
+  `start`为起始字符序号，`length`为自`start`开始所截取的长度。如果**有冒号`:`但省略冒号后面的数字**，则`start`或`length`则默认取值为0。
+
+  
+
+  前后截取
+
+  ```shell
+  ${parameter%word}    #最小限度从后面截取word(贪婪匹配)
+  ${parameter%%word}   #最大限度从后面截取word
+  ${parameter#word}    #最小限度从前面截取word
+  ${parameter##word}   #最大限度从前面截取word
+  ```
+
+  
 
 # 数组
 
@@ -1394,55 +1417,6 @@ echo "${test:+bye} -- $test"  # --   原值为空使用原空值
 test=hello
 echo "${test:+bye} -- $test"  #bye -- hello  原值不为空　使用新值
 ```
-
-截取字符串
-
-```shell
-${param:start:length}
-```
-
-`start`为起始字符序号，`length`为自`start`开始所截取的长度。如果**有冒号`:`但省略冒号后面的数字**，则`start`或`length`则默认取值为0。
-
-```shell
-str='hello'
-echo "${test::5}"   #hello
-echo "${test:0}"   #hello
-echo "${test:0:}"   #hello
-```
-
-
-
-${!prefix*}
-${!prefix@}
-
-将带有前缀为prefix的参数名打印出来
-${!name[@]}
-${!name[*]}
-
-
-
-${}带正则匹配的几种表达式：
-${parameter#word}
-${parameter##word}
-
-从头开始扫描word，将匹配word正则表达的字符过滤掉
-
-#为最短匹配，##为最长匹配
-${parameter%word}
-${parameter%%word}
-
-从尾开始扫描word，将匹配word正则表达式的字符过滤掉
-
-%为最短匹配，%%为最长匹配
-
-${parameter/pattern/string}
-${parameter//pattern/string}
-
-将parameter对应值的pattern字符串替换成为string字符串
-
-/表示只替换一次
-
-//表示全部替换
 
 # 调用外部脚本
 

@@ -141,6 +141,7 @@ unzip-iconv，为unzip增加了转码补丁，可在解压缩时使用`-O`参数
 ```shell
 zip -r test.zip test/  #打包 -r递归
 unzip test.zip  #解包
+unzip test.zip -d /tmp   #解包到指定目录
 #指定编码格式(如gbk)避免乱码 需要安装unzip-iconv
 unzip -O gbk test.zip
 zip -P 123 files.zip files

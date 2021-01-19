@@ -65,10 +65,16 @@ cd $dest/etc
   - 日志级别`LSF_LOG_MASK`取值：
     - `LOG_WARNING`
     - `LOG_DEBUG`（如果hpc的Administrator用户是root，则日志级别为DEBUG）
+    
+  - `bjobs`中`EXEC_HOST`显示为单行模式：`LSB_SHORT_HOSTLIST=1`
+
+    
 
 - 共用默认配置信息`lsf.shared`
 
   设置集群配置文件默认值，提供给`lsf.cluster.<name>`文件（name为集群的名字，可在`lsf.shared`中定义该集群的各项默认值）使用。
+
+  
 
 - 某个集群的配置文件`lsf.cluster.openlava`（openlava为默认的集群名字，可更改）
 

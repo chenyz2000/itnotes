@@ -1,8 +1,12 @@
 #!/bin/bash
+
 if [[ $USER != root ]]; then
-  echo "need root or sudo."
+  echo "need root or $sudo."
   exit
 fi
+
+sudo='sudo'
+[[ $(command -v sudo) ]] || sudo=''
 
 #-----
 jail_file=/etc/fail2ban/jail.d/jail.local
@@ -25,8 +29,8 @@ function install_fail2ban() {
   if [[ $(which pacman 2>/dev/null) ]]; then
     pacman -Syy fail2ban --no-confirm
   elif [[ $(which yum 2>/dev/null) ]]; then
-    #yum install -y epel-release
-    #yum makecache
+    yum install -y epel-release
+    yum makecache
     yum install -y fail2ban
   elif [[ $(which apt 2>/dev/null) ]]; then
     apt install -y fail2ban
@@ -127,7 +131,7 @@ ip="${@:2:$#}"
 #if [[ $(echo $ip |grep -Eo "[0-9\. ]") ]]
 if [[ "$ip" ]]
 then
-  sudo fail2ban-client set $jail banip "$ip"
+  $sudo fail2ban-client set $jail banip "$ip"
 else
   echo "usage: banip ip [jail_name]"
   echo "tip: default jail is sshd"
@@ -141,11 +145,11 @@ ip="${@:2:$#}"
 
 if [[ $ip == 'all' ]]
 then
-  sudo fail2ban-client unban --all
+  $sudo fail2ban-client unban --all
 #elif [[ $(echo $ip |grep -Eo "[0-9]+[0-9\.]+[0-9]") ]]
 if [[ "$ip" ]]
 then
-  sudo fail2ban-client set $jail unbanip $ip
+  $sudo fail2ban-client set $jail unbanip $ip
 else
   echo "usage: unbanip ip [jail_name]"
   echo "tip: default jail is sshd"
@@ -154,12 +158,12 @@ fi
 
   #ignore ip
   echo '#!/bin/bash
-sudo fail2ban-client set sshd addignoreip "$@"
+$sudo fail2ban-client set sshd addignoreip "$@"
 ' >/usr/local/bin/ignoreip
 
   ##delete ignore ip
   echo '#!/bin/bash
-sudo fail2ban-client set sshd delignoreip "$@"
+$sudo fail2ban-client set sshd delignoreip "$@"
 ' >/usr/local/bin/delignoreip
 
   ##sshd blacklist
@@ -173,10 +177,10 @@ then
   do
     jail_name=${jail_item:1:-1}
     echo -e "\e[1m +++++jail $jail_name +++++ \e[0m"
-    sudo fail2ban-client status ${jail_name}
+    $sudo fail2ban-client status ${jail_name}
   done
 else
-  sudo fail2ban-client status ${jail}
+  $sudo fail2ban-client status ${jail}
 fi
 
 echo -e "\e[1m ++++++++++ \e[0m"

@@ -264,12 +264,9 @@ exec dbus-launch $session
 ## 黑屏
 
 - VNC协议基于X，不支持wayland
-
-- 缺少xorg相关包（xorg-server-* ，xorg-X11-xinit，xorg-x11-xauth等等）
-
-- 连接虚拟机中的vncserver黑屏（甚至执行vncserver无法开启服务），关闭该虚拟机设置中图形选项的显卡3D加速。
-
+- 缺少xorg相关包（xorg-X11-xinit，xorg-x11-xauth等等）
 - xstarup中没有定义要执行的应用（比如桌面）
+- 虚拟机中vnc黑屏，尝试调整虚拟软件的设置中图形相项，虚拟中使用tuborvnc也可能黑屏。
 
 ## dbus冲突
 

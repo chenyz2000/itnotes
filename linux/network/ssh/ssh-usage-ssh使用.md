@@ -669,6 +669,15 @@ ssh命令中使用参数`-v`可输出详细的调试信息
 
 - 可能是selinux处于enforcing模式
 
+  关闭se linux
+
+  ```shell
+  setenforce 0
+  sed -i '/SELINUX=/c SELINUX=disabled' /etc/selinux/config
+  ```
+
+  或者配置相关策略
+
   
 
 - 关闭了用户密钥登录
