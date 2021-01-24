@@ -181,6 +181,8 @@ vncserver -dpi 96 -geometry=1600x960
 
 ### xstarup文件
 
+多数发行版默认的配置文件都直接可用，如无特别需要，无需更改。
+
 `~/.vnc/xstartup`文件供启动虚拟会话时使用，是一个shell文件，配置启动会话时的相关环境，最重要的是配置启动会话的桌面环境或窗口管理器，示例如下：
 
 ```shell
@@ -189,34 +191,33 @@ unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
 export XKL_XMODMAP_DISABLE=1
 
-# [ -x /etc/vnc/xstartup ] && exec /etc/vnc/xstartup
-# [ -r $HOME/.Xresources ] && xrdb $HOME/.Xresources
-
 #vnc config tool show at the top-left in vnc window 开启后连上vnc会再左上角看到一个配置窗口
-# vncconfig -iconic &
+command -v vncconfig && vncconfig -iconic &
+
+#一些发行版安装vncserver后，调用执行/etc/X11/xinit/xinitrc文件即可
+[[ -r /etc/X11/xinit/xinitrc ]] && source /etc/X11/xinit/xinitrc
+#/etc/X11/xinit/xinitrc文件中包含执行exec行，如果顺利执行，下面的内容并不会执行
+
+#设置x资源 如果用户使用自定义的.xinitrc时执行：
+[ -r $HOME/.Xresources ] && xrdb $HOME/.Xresources
 
 #指定要使用什么桌面环境或窗口管理器
 #session=startxfce4    #xfce
 #session=startlxde     #lxde
 session=gnome-session  #GNOME
+#session='gnome-session --session=gnome-classic'
 #session=mate-session  #MATE
 #session=startdde      #DDE(Deepin桌面)
 #session=startkde      #KDE Plasma
 #session=i3            #i3wm
 
 # Copying clipboard content from the remote machine (need install autocutsel)
-#autocutsel -fork
-if [[ $session == 'gnome-session' ]]; then
-  if [[ -f /etc/sysconfig/desktop ]]; then
-    . /etc/sysconfig/desktop
-	else
-		session='gnome-session --session=gnome-classic'
-	fi
-fi
+command -v autocutsel && autocutsel -fork
     
-
 #exec $session
-exec dbus-launch $session
+exec /usr/bin/dbus-daemon "$session"
+
+vncserver -kill $DISPLAY
 ```
 
 
@@ -261,31 +262,74 @@ exec dbus-launch $session
 
 # 相关问题
 
+## Warning: *****  is taken because of /tmp/.X1-lock
+
+以前的会话临时文件仍然存在，删除`/tmp/.X1-lock`即可。
+
+如果还提示`/tmp/.X11-unix/X1`，继续删除`/tmp/.X11-unix/X1`文件再测试：
+
+在xstartup中添加：
+
+
+
 ## 黑屏
 
 - VNC协议基于X，不支持wayland
 - 缺少xorg相关包（xorg-X11-xinit，xorg-x11-xauth等等）
 - xstarup中没有定义要执行的应用（比如桌面）
-- 虚拟机中vnc黑屏，尝试调整虚拟软件的设置中图形相项，虚拟中使用tuborvnc也可能黑屏。
+- 虚拟机中vnc黑屏，尝试调整虚拟软件的设置中图形相项。
+- 虚拟中使用tuborvnc也可能黑屏。
+
+
 
 ## dbus冲突
 
 > Could not make bus activated clients aware of XDG_CURRENT_DESKTOP=GNOME environment variable: Could not connect: Connection refused
 
-例如安装了anaconda，它的bin目录中的dbus-daemon会与系统自带的dbus-daemon冲突。
+安装了anaconda，其目录中带有一些比系统中已有的程序版本不一致的的程序，如dbus-daemon，如果用户为anaconda导出的环境变量优先级更高，vncserver将调用到ananconda中的dbus-daemon。  
 
-解决方法：
+解决思路是避免anaconda的dbus-daemon被vncserver调用：
 
-- 不使用ananconda
+- 默认不激活conda环境，需要时再调用
 
-- 不要自动激活ananconda或者将其加入登录后自动加载的环境变量，使用时手动加载。
-
-- 提升系统的dbus-daemon优先级，示例：
+  安装anaconda时，其会在`.bashrc`或`.zshrc`（或其他shell的用户配置文件）中添加激活base环境的命令，执行`conda config --set auto_activate_base false`可禁止base环境自动激活，或者在conda配置文件`.condarc`中加入：
 
   ```shell
-  cp $(which dbus-daemon) /usr/local/bin/
+  auto_activate_base: false
+  ```
+
+  或者删掉anaconda安装时自动添加的内容，但为了方便使用，可以保留或手动添加载入conda环境的内容，以方便调用conda命令，例如：
+
+  ```shell
+  . "/opt/anaconda3/etc/profile.d/conda.sh"
+  ```
+
+  
+
+- 降低ananconda环境变量优先级
+
+  对于需要默认激活anaconda的base环境的情况，可以重新配置anaconda的环境变量，确保将ananconda的环境变量置于系统默认环境变之后，避免vncserver调用到anaconda中的程序：
+
+  ```shell
+  export PATH=$PATH:/path/to/conda/bin
+  ```
+
+  
+
+  或者单独针对dbus-deamon，例如：
+
+  ```shell
+  cp /usr/bin/dbus-daemon /usr/local/bin/
   export PATH=/usr/local/bin:$PATH
   ```
+
+  或者在xstartup文件中将/usr/bin/在PATH中的优先级提高：
+
+  ```shell
+  export PATH=/usr/bin:$PATH
+  ```
+
+
 
 
 

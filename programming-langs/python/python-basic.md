@@ -429,6 +429,10 @@ isinstance(a,int)    #True
 - 私有变量：在变量名前面加上两个下划线`__`，其就变成了一个私有变量（private），只有内部可以访问，外部不能访问。
 
   示例参看[类的封装——访问限制](#访问限制)。
+  
+- `global`可以将变量提升为全局变量
+
+- `nonlocal `在函数中声明，可以将变量作用域提升到该函数的外部函数到作用范围中
 
 ## 运算符
 
@@ -811,7 +815,7 @@ a.run()  #hello,python
 
 > 实现多态的技术称为：动态绑定（dynamic binding），是指在执行期间判断所引用对象的实际类型，根据其实际的类型调用其相应的方法。
 
-但同时python是弱类型语言，实际上并不需要规避类型的耦合风险，所以大概可以认为python本身就是多态的。
+但同时python是弱类型语言，实际上并不需要规避类型的耦合风险，所以可以认为python本身就是多态的。
 
 
 
@@ -828,6 +832,33 @@ python动态绑定，无需专门定义重载。
 - 可变参数个数
 
   python有可变[参数](#参数)。
+
+## 枚举类
+
+```python
+from enum import Enum
+Role = Enum('role', ('admin','normal','guest'))
+#或
+# class Role(Enum):
+#     admin = 1
+#     normal = 2
+#     guest = 3
+
+Role.admin.value  #1
+Role.admin.name   #male
+
+for role in Role.__members__:
+  print(role)  #打印 admin normal guest
+
+def check_permission(role):
+  if Role[role]==Role.admin:
+   	print(f'role {role} has permission')
+
+user1={'id':'123','role':'admin'}
+check_permission(user1['role'])
+```
+
+
 
 # 异常处理
 

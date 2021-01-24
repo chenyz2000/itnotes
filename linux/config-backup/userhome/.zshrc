@@ -37,7 +37,7 @@ DISABLE_MAGIC_FUNCTIONS=true
 #ENABLE_CORRECTION="true"
 
 # Uncomment the following line to display red dots whilst waiting for completion.
-# COMPLETION_WAITING_DOTS="true"
+COMPLETION_WAITING_DOTS="true"
 
 # Uncomment the following line if you want to disable marking untracked files
 # under VCS as dirty. This makes repository status check for large repositories much, much faster.
@@ -48,12 +48,7 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 # or set a custom format using the strftime function format specifications, see 'man strftime' for details.
 HIST_STAMPS="mm/dd/yyyy"
 
-
-# Would you like to use another custom folder than $ZSH/custom?
-# ZSH_CUSTOM=/path/to/new-custom-folder
-
 # load plugins.They can be found in ~/.oh-my-zsh/plugins/*
-# more plugins, more launch time
 plugins=(git autojump zsh-autosuggestions)
 
 # Preferred editor for local and remote sessions
@@ -73,6 +68,8 @@ compinit
 
 ###++++++++++++++++++++++++++
 unalias -a
+
+alias history='history -i'
 os=$(uname)
 
 if [[ $os == Linux ]]; then #iproute
@@ -150,14 +147,17 @@ elif [[ $os == Darwin ]]; then
     cd "$(brew --repo)"/Library/Taps/homebrew/homebrew-cask
     git remote set-url origin https://mirrors.ustc.edu.cn/homebrew-cask.git
     #
-    cd && brew tap beeftornado/rmtree
+    cd
+    brew tap beeftornado/rmtree
     echo "use 'brew rmtree'  instead of 'brew uninstall' "
     echo "rmtree will remove package and dependcies (only for formulas)."
+    brew tap buo/cask-upgrade
+    echo "run 'brew cu' to check and upgrade packages in cask "
   }
 
   #export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles
   export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles
-#  export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.aliyun.com/homebrew/homebrew-bottles
+  #  export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.aliyun.com/homebrew/homebrew-bottles
 
   alias update='brew update -v && echo ---outdated---  && brew outdated'
   alias upgrade='brew outdated && brew upgrade -v'
@@ -284,32 +284,26 @@ export  GOPROXY=https://mirrors.aliyun.com/goproxy/,direct
 gopath=/Users/levin/Library/golang
 [[ -d $gopath ]] && export GOPATH=$gopath
 
-#---macos PATH
-export PATH="/usr/local/sbin:$PATH"
-
-
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/usr/local/Caskroom/miniconda/base/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/usr/local/Caskroom/miniconda/base/etc/profile.d/conda.sh" ]; then
-        . "/usr/local/Caskroom/miniconda/base/etc/profile.d/conda.sh"
-    else
-        export PATH="/usr/local/Caskroom/miniconda/base/bin:$PATH"
-    fi
-fi
-unset __conda_setup
-# <<< conda initialize <<<
-
-alias condaclean='conda clean -ady'
+#conda
+[ -f "/usr/local/Caskroom/miniconda/base/etc/profile.d/conda.sh" ] && . "/usr/local/Caskroom/miniconda/base/etc/profile.d/conda.sh"
 
 #-anaconda/miniconda
 #prevent auto active conda env, execute:
 #conda config --set auto_activate_base false
 
+alias condaclean='conda clean -ady'
+
 #ansible
 #ANSIBLE_CONFIG=~/.ansible.cfg
+
+#---macos PATH
+if [[ $os == Darwin ]]
+then
+  export PATH="/usr/local/sbin:$PATH"
+
+  #sshfs
+  alias sftpvps='sshfs vps:/root /tmp/vps -o follow_symlinks && open /tmp/vps'
+  alias sftpcvml='sshfs vps:/root /tmp/vps -o follow_symlinks && open /tmp/cvml'
+fi
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

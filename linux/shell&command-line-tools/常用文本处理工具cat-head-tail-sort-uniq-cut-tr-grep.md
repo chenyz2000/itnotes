@@ -402,3 +402,4 @@ grep -o -E '\b[0-9]{1,3}(\.[0-9]{1,3}){3}\b' /etc/resolv.conf  #查看DNS服务�
 ## [sed](sed.md)
 
 ## [awk](awk.md)
+

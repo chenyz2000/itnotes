@@ -15,14 +15,16 @@ SQL 结构化查询语言
   - 列  column  表中的字段  每个列都有限制的数据类型
   - 行  row  表中的一个记录
   - 主键  primary key  对行进行唯一标志的一列或几列
-
-Person表示例：
-
-| LastName  | FirstName | Address      | City      |
-| --------- | --------- | ------------ | --------- |
-| Hansen    | Ola       | Timoteivn 10 | Sandnes   |
-| Svendson  | Tove      | Borgvn 23    | Sandnes   |
-| Pettersen | Kari      | Storgt 20    | Stavanger |
+  
+  person表示例：
+  
+  | name  | gender | birth        |
+  | ----- | ------ | ------------ |
+  | Lily  | Ola    | Timoteivn 10 |
+  | Ivy   | Tove   | Borgvn 23    |
+  | lilac | Kari   | Storgt 20    |
+  
+  
 
 # SQL语句
 
@@ -31,14 +33,25 @@ SQL语法规则
 - 大小写不敏感
 - 使用分号结束
 
+
+
 ## SQL 数据操作语言 (DML)
 
 查询和更新：
 
 - `SELECT` - 从数据库表中获取数据
+
 - `UPDATE` - 更新数据库表中的数据
+
 - `DELETE` - 从数据库表中删除数据
+
 - `INSERT INTO` - 向数据库表中插入数据
+
+  ```sql
+  insert into person 
+  ```
+
+  
 
 ## SQL 数据定义语言 (DDL)
 
