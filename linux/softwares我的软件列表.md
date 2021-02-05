@@ -104,13 +104,15 @@
 
 - teamviewer    有客户端和服务端
 - splashtop    有客户端和服务端
+- todesk
+- sunlogin 向日葵
 - vnc
   - 服务端
     - vino
     - tigervnc
   - 客户端
     - vinagre    支持vnc rdp spice
-    - realvnc-vnc-viewer
+    - realvnc-vnc-viewer （vncviewer）
 
 ## 网络代理
 
@@ -260,7 +262,6 @@
 ### 在线音乐
 
 - netease-cloud-music    网易云音乐
-  - [musicbox](https://github.com/darknessomi/musicbox)    网易音乐终端版
 - spotify     音乐流媒体服务[spotify](https://www.spotify.com/)（注册帐号和**有时候登录时**需翻越gfw）
 - pithos      第三方的pandora客户端  [pithos](https://pithos.github.io/)
 

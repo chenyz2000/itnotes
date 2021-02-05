@@ -15,6 +15,8 @@ custom_channels:
 #  - https://mirrors.sjtug.sjtu.edu.cn/anaconda/pkgs/main/
 #  - https://mirrors.sjtug.sjtu.edu.cn/anaconda/pkgs/free/
 #  - https://mirrors.sjtug.sjtu.edu.cn/anaconda/cloud/conda-forge/
+
+channel_priority: flexible
 ssl_verify: true
 auto_activate_base: false
 

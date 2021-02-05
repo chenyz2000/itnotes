@@ -29,40 +29,31 @@ docker基础镜像（base images，如各个发行版的基础镜像）使用的
 
 # 安装配置
 
-- 安装docker
-
-  提示：windows专业版和企业版用户开启hyper-V；windows家庭版用户无hyper-V，只能使用[docker toolbox](https://docs.docker.com/toolbox/)。
-
-- 启用docker服务`systemctl start docker`
+安装docker参看[docker docs : get started](https://docs.docker.com/get-docker/)
 
 ## 修改镜像源
 
-Linux/Mac修改 `/etc/docker/daemon.json`，windows（安装docker的专业版和企业版）修改`%programdata%\docker\config\daemon.json`，示例：
+Linux修改 `/etc/docker/daemon.json`，windows修改`%programdata%\docker\config\daemon.json`，示例：
 
-```shell
+```json
 {
   "registry-mirrors": ["源地址"]
 }
 ```
 
-安装docker toolbox的windows：
+Mac在docker的preference中修改Docker Engine配置：
 
-1. 开启docker quickstart terminal，执行：
+```json
+{
+  "experimental": false,
+  "debug": true,
+  "registry-mirrors": [
+    "https://docker.mirrors.ustc.edu.cn"
+  ]
+}
+```
 
-   ```shell
-   docker-machine ssh default
-   ```
 
-2. 向`/var/lib/boot2docker/profile`文件中添加源（使用`sudo`）：
-
-   > EXTRA_ARGS='|EXTRA_ARGS='--registry-mirror=源地址
-
-3. 退出后重启docker，执行以下命令：
-
-   ```shell
-   exit
-   docker-machine restart default
-   ```
 
 ## 非root用户使用docker
 

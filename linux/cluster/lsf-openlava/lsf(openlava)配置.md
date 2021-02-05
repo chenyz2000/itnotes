@@ -15,6 +15,33 @@ badmin reconfig
 
 
 
+# 主配置文件
+
+在安装目录下的`etc/lsf.conf`
+
+```shell
+#===常规配置略 以下常用添加或修改的配置行
+#bjobs/bhist精简输出 每个slot一行改为输出到一行 如8*c01
+LSB_SHORT_HOSTLIST=1
+
+#管理节点列表 有多个管理节点时配置
+LSF_MASTER_LIST="master"
+
+#实时将作业的标准输出写入
+LSB_STDOUT_DIRECT=y
+
+#接受提交作业到时间间隔
+JOB_ACCEPT_INTERVAL=0
+
+#最大作业
+MBD_MAX_JOBS_SCHED=30000
+
+#作业最大slot数量
+MBD_MAX_SLOTS_SCHED=64
+```
+
+
+
 # 资源限制
 
 资源管理配置文件`config/lsb.resources`，可调控用户在集群中可使用的资源配额。

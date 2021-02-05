@@ -473,9 +473,14 @@ linux自带的`linux-frimware`已经支持大多数驱动，如果某些设置�
 [swappiness](https://wiki.archlinux.org/index.php/Swap_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)#Swappiness)值代表了内核对于交换空间的喜好(或厌恶)程度。Swappiness 可以有 0 到 100 的值。设置这个参数为较低的值会减少内存的交换，从而提升一些系统上的响应度。默认值过大，调低该值很有必要。
 
 ```shell
-echo 'vm.swappiness=0
-vm.vfs_cache_pressure=50'> /etc/sysctl.d/vm.conf
+echo 'vm.swappiness=1
+vm.vfs_cache_pressure=50'> /etc/syscl.d/vm.conf
 ```
+
+从kernel 3.5rc2开始swappiness=0表示不使用交换空间，当内存耗尽会触发OOM，优先终止内存占用最多的进程。
+
+对于笔记本用户，使用休眠功能需要swap，可以设置为0；对于日常使用且大内存较大，无休眠需要，可以设置为0，该情况下也没有必要划分swap分区或swap文件了。
+
 
 
 ## 主机名

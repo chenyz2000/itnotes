@@ -160,7 +160,7 @@ elif [[ $os == Darwin ]]; then
   #  export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.aliyun.com/homebrew/homebrew-bottles
 
   alias update='brew update -v && echo ---outdated---  && brew outdated'
-  alias upgrade='brew outdated && brew upgrade -v'
+  alias upgrade='brew outdated && brew upgrade -v && brew cu -a'
   alias pkgclean='brew cleanup'
   alias finderplugin='brew cask install qlcolorcode qlstephen qlmarkdown quicklook-json qlimagesize quicklookase qlvideo webpquicklook'
   #suspicious-package suspicious-package quicklook-pat provisionql
@@ -302,8 +302,8 @@ then
   export PATH="/usr/local/sbin:$PATH"
 
   #sshfs
-  alias sftpvps='sshfs vps:/root /tmp/vps -o follow_symlinks && open /tmp/vps'
-  alias sftpcvml='sshfs vps:/root /tmp/vps -o follow_symlinks && open /tmp/cvml'
+  alias sshfsvps='sshfs vps:/root /tmp/vps -o follow_symlinks && open /tmp/vps'
+  alias sshfscvml='sshfs vps:/root /tmp/vps -o follow_symlinks && open /tmp/cvml'
 fi
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

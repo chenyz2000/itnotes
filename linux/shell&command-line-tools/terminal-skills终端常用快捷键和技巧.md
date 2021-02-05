@@ -242,6 +242,8 @@ Mac键盘中，将<kbd>Ctrl</kbd>替换成<kbd>control</kbd>，<kbd>Alt</kbd>替
   !!:gs/aaa/bbb   #将上一条命令替换成echo bbb bbb
   ```
 
+
+
 # 魔法空格magic-space
 
 magic-space 让和历史记录相关的特殊参数表达式（参看前文命令历史中特殊参数一节）立即“显出原形”，zsh默认启用该功能。

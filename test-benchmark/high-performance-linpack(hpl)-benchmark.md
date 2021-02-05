@@ -91,6 +91,8 @@ HPL测试常用组合选择：
 
   intel工具集包含了数学库(mkl)、各种编译器(如icc、gcc)和intel mpi，用于Intel的cpu。
 
+  intel现在提供可供免费下载安装的[oneAPI](https://software.intel.com/content/www/us/en/develop/tools/oneapi/hpc-toolkit/download.html#ns=Local#operatingsystem=Linux&#distributions=Web%20&%20Local%20(recommended)&#options=Local)
+
   提示：intel工具集安装完毕后加载其安装目录下的脚本即可设置好环境变量，例如其安装在`/opt/intel`目录，使用 `source /opt/intel/bin/compilervars.sh intel64`即可（这里的`intel64`应当根据具体架构更改）。
 
   此外，安装Intel工具集后，在其安装目录下的`mkl/benchmarks`下有编译好的`linpack`及`mplinpack`测试工具，可直接使用；或者下载[intel mkl bechmarks suit](https://software.intel.com/en-us/articles/intel-mkl-benchmarks-suite)。
@@ -144,13 +146,15 @@ make install
    执行`setup`目录的`make_generic`脚本将以`setup/Make.UNKOWN.in`文件为模板，根据当前系统环境变量情况修，生成一份`Make.UNKOWN`文件：
 
    ```shell
-bash setup/make_generic
+   bash setup/make_generic
    #复制生成的setup/Make.UNKNOWN到hpl源码根目录下并根据需要改名为Make.<arch>，<arch>部分以架构命名，如Make.aarch64
-cp setup/Make.UNKOWN ./Make.aarch64
+   cp setup/Make.UNKOWN ./Make.aarch64
    ```
 
-   提示：`Make.UNKOWN`修改后的`<arch>`名字其实也是随意的，只是方便区分而已。
    
+
+   提示：`Make.UNKOWN`修改后的`<arch>`名字其实也是随意的，只是方便区分而已。
+
    
 
    `Make.<arch>`文件中重要配置行的说明：
@@ -166,25 +170,25 @@ cp setup/Make.UNKOWN ./Make.aarch64
    - LAdir:  BLAS 库或 VSIPL 库所在的目录
 
    - LAinc、LAlib: BLAS 库或 VSIPL 库头文件、库文件
-   
+
    - HPL_OPTS: 包含采用什么库、是否打印详细的时间、L广播参数等，若
-   
+
      - 采用 FLBAS 库则置为空
      - 采用 CBLAS 库为`-DHPL_CALL_CBLAS`
      - 采用 VSIPL  为`-DHPL_CALL_VSIPL`
      
    - `-DHPL_DETAILED_TIMING`为打印每一步所需的时间，默认不打印
-   
+
    - -DHPL_COPY_L`为在  L 广播之前拷贝 L，默认不拷贝
-   
+
    - CC:  C 语言编译器
-   
+
    - CCFLAGS: C 编译选项
-   
+
    - LINKER: Fortran 77 编译器
-   
+
    - LINKFLAGS: Fortran 77 编译选项(Fortran 77 语言只有在采用 Fortran 库时才需要)
-   
+
      
 
 2. 编译安装
@@ -195,10 +199,12 @@ cp setup/Make.UNKOWN ./Make.aarch64
    make arch=aarch
    ```
 
+   
+
    编译后的可执行文件生成在以arch值为名目录中，该目录在hpl源码目录下的bin目录下（如Linux_Intel64编译生成在目录`bin/Linux_Intel64/`下），目录中包含xhpl可执行文件及HPL.dat。
 
    提示：如果之前使用其他`Make.<arch>`文件编译过，make之前应当执行`make clean`。
-
+   
    编译后的可执行文件一般在源码目录下`bin/<arch>`中。
 
 ## 示例：使用intel工具集编译

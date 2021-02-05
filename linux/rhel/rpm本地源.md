@@ -8,7 +8,7 @@
 - 同步自公共源
 - 自行添加的软件包
 
-## 使用系统镜像文件
+## 系统镜像文件
 
 挂载iso系统镜像文件（例如centos的everything镜像文件含有大量软件包），假如iso为`~/centos.iso`，挂载到`/srv/repo/iso`：
 
@@ -52,8 +52,12 @@ mount -o loop ~/centos.iso /srv/repo/iso
    EULA
    GPL
    ```
+   
+   如果只想同步某些目录，使用包含参数`—include`和`--include-from`，使用类似上面所述排除方法。
+   
+   
 
-## 自定义目录
+## 包含rpm包的目录
 
 将软件包放到指定目录，将该目录设置为软件源，下称该目录我软件源目录。
 
